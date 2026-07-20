@@ -12,8 +12,8 @@ begin
     raise exception '잘못된 진행자 PIN입니다';
   end if;
 
-  delete from holdings;
-  delete from participants;
+  delete from holdings where true;
+  delete from participants where true;
   update game_state set current_round = 0, is_paused = false, updated_at = now() where id = 1;
 end;
 $$;

@@ -29,7 +29,7 @@ begin
   ) liq
   where p.id = liq.participant_id;
 
-  delete from holdings;
+  delete from holdings where true;
 
   update game_state set current_round = v_round + 1, is_paused = false, updated_at = now() where id = 1;
 

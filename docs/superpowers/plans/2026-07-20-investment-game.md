@@ -16,6 +16,7 @@
 - Host actions (`host_next_year`, `host_end_game`, `host_toggle_pause`, `host_reset_game`) take a `p_pin text` argument and verify it server-side against a bcrypt hash in `host_config` (via pgcrypto). Never store the PIN in plaintext or in frontend code.
 - On this Supabase project, `pgcrypto` functions (`crypt`, `gen_salt`) live in the `extensions` schema, not `public`. Any RPC that calls them needs `set search_path = public, extensions` (not just `public`) — discovered while implementing Task 4 (`set_host_pin`) and applied there and to every host_* RPC that calls `crypt()`.
 - Functions declared `returns table (...)` create OUT-parameter-like names matching the return column list, which shadow bare column references of the same name inside the function body and cause "column reference is ambiguous" errors. `join_game` (Task 5) and `buy_stock` (Task 6) both hit this — qualify any WHERE/SET clause column with its table name whenever it matches one of the function's own return column names (e.g. `where participants.nickname = ...` not `where nickname = ...` when `nickname` is also a return column). The same ambiguity hits `ON CONFLICT (...)` — its target column list is checked against the same scope and cannot be table-qualified, so when a conflict column matches a return column (e.g. `participant_id` in `buy_stock`), rewrite the upsert as `INSERT ... ; EXCEPTION WHEN unique_violation THEN UPDATE ...` instead (confirmed by direct testing: this is a real Postgres behavior, not implementer error).
+- Bare `DELETE FROM table;` (no WHERE clause) works fine over a direct DB connection but is rejected with `"DELETE requires a WHERE clause"` when the same statement runs inside a `SECURITY DEFINER` RPC invoked through the app's normal `supabase.rpc(...)` call path (Supabase applies stricter write-safety at the API layer than at a raw admin connection). Found live in production for `host_next_year`, `host_end_game`, `host_reset_game`. Fix: add a no-op `WHERE true` to every intentionally-unconditional DELETE (e.g. `delete from holdings where true;`) — same effect, satisfies the check.
 - Trading pause auto-clears (`is_paused = false`) whenever `host_next_year` runs — each new round starts open.
 - Money is `bigint`/`int` (원, no decimals). Starting cash is 1,200,000.
 - All SQL migrations and tests run via `node scripts/run-sql.mjs <file>` against the real Supabase Postgres instance (no local Docker stack assumed).
@@ -972,7 +973,7 @@ begin
   ) liq
   where p.id = liq.participant_id;
 
-  delete from holdings;
+  delete from holdings where true;
 
   update game_state set current_round = v_round + 1, is_paused = false, updated_at = now() where id = 1;
 
@@ -1102,7 +1103,7 @@ begin
   ) liq
   where p.id = liq.participant_id;
 
-  delete from holdings;
+  delete from holdings where true;
 
   update game_state set current_round = 11, is_paused = false, updated_at = now() where id = 1;
 end;
@@ -1209,8 +1210,8 @@ begin
     raise exception '잘못된 진행자 PIN입니다';
   end if;
 
-  delete from holdings;
-  delete from participants;
+  delete from holdings where true;
+  delete from participants where true;
   update game_state set current_round = 0, is_paused = false, updated_at = now() where id = 1;
 end;
 $$;
