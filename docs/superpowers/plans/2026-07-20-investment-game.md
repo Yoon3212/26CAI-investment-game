@@ -15,7 +15,7 @@
 - Every table has RLS enabled with SELECT-only policies for anon/authenticated. All writes happen exclusively through `SECURITY DEFINER` RPC functions — never add a client-side INSERT/UPDATE/DELETE against these tables.
 - Host actions (`host_next_year`, `host_end_game`, `host_toggle_pause`, `host_reset_game`) take a `p_pin text` argument and verify it server-side against a bcrypt hash in `host_config` (via pgcrypto). Never store the PIN in plaintext or in frontend code.
 - On this Supabase project, `pgcrypto` functions (`crypt`, `gen_salt`) live in the `extensions` schema, not `public`. Any RPC that calls them needs `set search_path = public, extensions` (not just `public`) — discovered while implementing Task 4 (`set_host_pin`) and applied there and to every host_* RPC that calls `crypt()`.
-- Functions declared `returns table (...)` create OUT-parameter-like names matching the return column list, which shadow bare column references of the same name inside the function body and cause "column reference is ambiguous" errors. `join_game` (Task 5) and `buy_stock` (Task 6) both hit this — qualify any WHERE/SET clause column with its table name whenever it matches one of the function's own return column names (e.g. `where participants.nickname = ...` not `where nickname = ...` when `nickname` is also a return column).
+- Functions declared `returns table (...)` create OUT-parameter-like names matching the return column list, which shadow bare column references of the same name inside the function body and cause "column reference is ambiguous" errors. `join_game` (Task 5) and `buy_stock` (Task 6) both hit this — qualify any WHERE/SET clause column with its table name whenever it matches one of the function's own return column names (e.g. `where participants.nickname = ...` not `where nickname = ...` when `nickname` is also a return column). The same ambiguity hits `ON CONFLICT (...)` — its target column list is checked against the same scope and cannot be table-qualified, so when a conflict column matches a return column (e.g. `participant_id` in `buy_stock`), rewrite the upsert as `INSERT ... ; EXCEPTION WHEN unique_violation THEN UPDATE ...` instead (confirmed by direct testing: this is a real Postgres behavior, not implementer error).
 - Trading pause auto-clears (`is_paused = false`) whenever `host_next_year` runs — each new round starts open.
 - Money is `bigint`/`int` (원, no decimals). Starting cash is 1,200,000.
 - All SQL migrations and tests run via `node scripts/run-sql.mjs <file>` against the real Supabase Postgres instance (no local Docker stack assumed).
@@ -737,10 +737,14 @@ begin
 
   update participants set cash = participants.cash - v_cost where participants.id = v_participant.id;
 
-  insert into holdings (participant_id, stock_id, quantity)
-  values (v_participant.id, p_stock_id, p_quantity)
-  on conflict (participant_id, stock_id)
-  do update set quantity = holdings.quantity + excluded.quantity;
+  begin
+    insert into holdings (participant_id, stock_id, quantity)
+    values (v_participant.id, p_stock_id, p_quantity);
+  exception when unique_violation then
+    update holdings
+    set quantity = holdings.quantity + p_quantity
+    where holdings.participant_id = v_participant.id and holdings.stock_id = p_stock_id;
+  end;
 
   return query
     select v_participant.id, (v_participant.cash - v_cost), p_stock_id, p_quantity;
