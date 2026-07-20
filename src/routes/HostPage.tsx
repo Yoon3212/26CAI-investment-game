@@ -27,6 +27,9 @@ export default function HostPage() {
       </label>
 
       <div>
+        <button onClick={() => callHostRpc('host_start_game')} disabled={gameState.currentRound !== 0}>
+          게임 시작
+        </button>
         <button
           onClick={() => callHostRpc('host_next_year')}
           disabled={gameState.currentRound < 1 || gameState.currentRound >= 10}

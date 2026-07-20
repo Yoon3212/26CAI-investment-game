@@ -60,9 +60,19 @@ export default function ParticipantPage() {
     setHoldings(map)
   }
 
+  async function refreshMe(participantId: string) {
+    const { data } = await supabase
+      .from('participants')
+      .select('id, nickname, cash')
+      .eq('id', participantId)
+      .single()
+    if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
+  }
+
   useEffect(() => {
     if (!me) return
     refreshHoldings(me.id)
+    refreshMe(me.id)
   }, [me?.id, gameState?.currentRound])
 
   async function join() {
