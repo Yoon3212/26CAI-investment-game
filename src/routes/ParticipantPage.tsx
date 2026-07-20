@@ -33,7 +33,16 @@ export default function ParticipantPage() {
   const [view, setView] = useState<View>({ name: 'list' })
 
   useEffect(() => {
-    if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 11) return
+    if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 11) {
+      // No active round (before start, or after end): never keep previously
+      // revealed prices on screen — clear them and bail out of any chart
+      // view, or a stale tab could leak future-round prices after a reset.
+      setStocks([])
+      setPrices([])
+      setRounds([])
+      setView({ name: 'list' })
+      return
+    }
 
     async function loadStocksAndPrices() {
       const [{ data: stockRows }, { data: priceRows }, { data: roundRows }] = await Promise.all([
