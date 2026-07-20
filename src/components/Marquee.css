@@ -13,7 +13,7 @@
 .pp-marquee-track span {
   padding: 0 32px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 400;
   color: var(--pp-accent-ink);
 }
 

@@ -297,7 +297,9 @@ export default function ParticipantPage() {
   return (
     <main className="pp-page">
       <BrandBar />
-      <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요       라운드가 종료되면 자동으로 매도됩니다." />
+      {gameState.currentRound === 1 && (
+        <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요       라운드가 종료되면 자동으로 매도됩니다." />
+      )}
       <div className="pp-header">
         <div className="pp-row1">
           <span className="pp-nick">{me.nickname}</span>
