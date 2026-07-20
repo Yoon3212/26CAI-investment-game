@@ -16,19 +16,22 @@
 - Host actions (`host_next_year`, `host_end_game`, `host_toggle_pause`, `host_reset_game`) take a `p_pin text` argument and verify it server-side against a bcrypt hash in `host_config` (via pgcrypto). Never store the PIN in plaintext or in frontend code.
 - Trading pause auto-clears (`is_paused = false`) whenever `host_next_year` runs — each new round starts open.
 - Money is `bigint`/`int` (원, no decimals). Starting cash is 1,200,000.
-- All SQL migrations and tests run via `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f <file>` against the real Supabase Postgres instance (no local Docker stack assumed).
+- All SQL migrations and tests run via `node scripts/run-sql.mjs <file>` against the real Supabase Postgres instance (no local Docker stack assumed).
 - **The `/` participant page (Task 16) must not be built freely.** Before writing/committing its final component code, present the proposed layout/flow to the user and get explicit approval, per their instruction. The task below includes a first-draft proposal — treat it as a starting point for that conversation, not a final artifact to ship unreviewed.
 
 ## Prerequisites (manual, one-time, not part of the task loop)
 
-1. Node.js 18+ and npm installed locally.
-2. A Supabase project created at supabase.com. From **Settings → API**, copy the Project URL and `anon` public key. From **Settings → Database → Connection string → URI**, copy the direct (non-pooler, port 5432) connection string.
-3. `psql` installed locally (ships with any PostgreSQL install) and reachable on PATH.
-4. Export the DB connection string before running any DB task:
+1. Node.js 18+ and npm installed locally. `npm install` also pulls in `pg` (used by `scripts/run-sql.mjs` to run migrations/tests without needing a psql install).
+2. A Supabase project created at supabase.com. From **Settings → API**, copy the Project URL and `anon` public key. From **Settings → Database → Connection string**, use the **Session pooler** entry (host like `aws-<n>-<region>.pooler.supabase.com`, port 5432, user like `postgres.<project-ref>`) rather than the direct connection — Supabase's direct-connection host is IPv6-only and unreachable on IPv4-only networks.
+3. Export the DB credentials as discrete env vars before running any DB task (avoids ever having to URL-encode special characters in the password):
    ```bash
-   export SUPABASE_DB_URL="postgresql://postgres:[YOUR-PASSWORD]@db.xxxxxxxx.supabase.co:5432/postgres"
+   export PGHOST="aws-<n>-<region>.pooler.supabase.com"
+   export PGPORT="5432"
+   export PGUSER="postgres.<project-ref>"
+   export PGPASSWORD="<your-db-password>"
+   export PGDATABASE="postgres"
    ```
-5. A Cloudflare account with Pages enabled (needed only for Task 17).
+4. A Cloudflare account with Pages enabled (needed only for Task 17).
 
 ---
 
@@ -184,15 +187,21 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 
 ## 준비물
 - Node.js 18+
-- Supabase 프로젝트 (URL, anon key, DB 연결 문자열)
-- `psql` CLI
+- Supabase 프로젝트 (URL, anon key, DB 연결 정보 — Session pooler 권장, direct 연결은 IPv6 전용이라 막힐 수 있음)
 
 ## 로컬 개발
-1. `npm install`
+1. `npm install` (마이그레이션/테스트 실행용 `pg` 패키지 포함)
 2. `.env.example`을 `.env`로 복사하고 Supabase URL/anon key 입력
-3. `export SUPABASE_DB_URL="postgresql://..."` (마이그레이션/테스트 실행용)
+3. DB 접속 정보를 환경변수로 export (마이그레이션/테스트 실행용, psql 불필요):
+   ```bash
+   export PGHOST="aws-<n>-<region>.pooler.supabase.com"
+   export PGPORT="5432"
+   export PGUSER="postgres.<project-ref>"
+   export PGPASSWORD="<your-db-password>"
+   export PGDATABASE="postgres"
+   ```
 4. `supabase/migrations/*.sql`을 번호 순서대로 적용:
-   `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init_schema.sql` (이후 파일도 동일하게 순서대로)
+   `node scripts/run-sql.mjs supabase/migrations/0001_init_schema.sql` (이후 파일도 동일하게 순서대로)
 5. `npm run dev`
 
 ## 배포 (Cloudflare Pages)
@@ -301,10 +310,10 @@ git commit -m "feat: add Supabase client and shared types"
 - Create: `supabase/tests/0001_schema_test.sql`
 
 **Interfaces:**
-- Consumes: a reachable `SUPABASE_DB_URL` (Prerequisites)
+- Consumes: reachable PGHOST/PGUSER/PGPASSWORD env vars (Prerequisites)
 - Produces: the full table set from the Data Model Reference, with RLS enabled and SELECT-only policies. Every later RPC task depends on these tables existing.
 
-- [ ] **Step 1: Create `supabase/tests/_helpers.sql`** (session-local test assertion helper, auto-dropped when the psql connection closes)
+- [ ] **Step 1: Create `supabase/tests/_helpers.sql`** (session-local test assertion helper, auto-dropped when the node scripts/run-sql.mjs connection closes)
 
 ```sql
 create or replace function pg_temp.test_assert(condition boolean, message text)
@@ -395,7 +404,7 @@ create policy "public read holdings" on holdings for select using (true);
 
 - [ ] **Step 3: Apply the migration**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0001_init_schema.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0001_init_schema.sql`
 Expected: exits 0, prints `CREATE EXTENSION`, `CREATE TABLE` x7, `INSERT 0 1` x2, `ALTER TABLE` x7, `CREATE POLICY` x6.
 
 - [ ] **Step 4: Create `supabase/tests/0001_schema_test.sql`**
@@ -466,7 +475,7 @@ rollback;
 
 - [ ] **Step 5: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0001_schema_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0001_schema_test.sql`
 Expected: exits 0. Output contains `NOTICE: PASS: ...` for each assertion and no `FAIL:` lines, ending in `ROLLBACK`.
 
 - [ ] **Step 6: Commit**
@@ -514,7 +523,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0002_fn_set_host_pin.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0002_fn_set_host_pin.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0002_fn_set_host_pin_test.sql`**
@@ -554,7 +563,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0002_fn_set_host_pin_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0002_fn_set_host_pin_test.sql`
 Expected: exits 0, all `PASS:` notices, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -614,7 +623,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0003_fn_join_game.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0003_fn_join_game.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0003_fn_join_game_test.sql`**
@@ -656,7 +665,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0003_fn_join_game_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0003_fn_join_game_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -739,7 +748,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0004_fn_buy_stock.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0004_fn_buy_stock.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0004_fn_buy_stock_test.sql`**
@@ -808,7 +817,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0004_fn_buy_stock_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0004_fn_buy_stock_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -855,7 +864,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0005_fn_host_toggle_pause.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0005_fn_host_toggle_pause.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0005_fn_host_toggle_pause_test.sql`**
@@ -900,7 +909,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0005_fn_host_toggle_pause_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0005_fn_host_toggle_pause_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -967,7 +976,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0006_fn_host_next_year.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0006_fn_host_next_year.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0006_fn_host_next_year_test.sql`**
@@ -1030,7 +1039,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0006_fn_host_next_year_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0006_fn_host_next_year_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -1094,7 +1103,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0007_fn_host_end_game.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0007_fn_host_end_game.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0007_fn_host_end_game_test.sql`**
@@ -1152,7 +1161,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0007_fn_host_end_game_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0007_fn_host_end_game_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -1200,7 +1209,7 @@ $$;
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0008_fn_host_reset_game.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0008_fn_host_reset_game.sql`
 Expected: exits 0, prints `CREATE FUNCTION`.
 
 - [ ] **Step 3: Create `supabase/tests/0008_fn_host_reset_game_test.sql`**
@@ -1239,7 +1248,7 @@ rollback;
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0008_fn_host_reset_game_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0008_fn_host_reset_game_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -1284,7 +1293,7 @@ alter publication supabase_realtime add table game_state, participants, holdings
 
 - [ ] **Step 2: Apply**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/0009_seed_placeholder_data.sql`
+Run: `node scripts/run-sql.mjs supabase/migrations/0009_seed_placeholder_data.sql`
 Expected: exits 0, prints `INSERT 0 7`, `INSERT 0 10`, `INSERT 0 70`, `ALTER PUBLICATION`.
 
 - [ ] **Step 3: Create `supabase/tests/0009_seed_test.sql`**
@@ -1313,7 +1322,7 @@ select pg_temp.test_assert(
 
 - [ ] **Step 4: Run the test**
 
-Run: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -f supabase/tests/_helpers.sql -f supabase/tests/0009_seed_test.sql`
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0009_seed_test.sql`
 Expected: exits 0, all `PASS:`, no `FAIL:`.
 
 - [ ] **Step 5: Commit**
@@ -1616,7 +1625,16 @@ export default function HostPage() {
 
 - [ ] **Step 2: Manually verify against the real Supabase project**
 
-Run: `npm run dev`, open `/host`. Enter the PIN set via `set_host_pin` (Task 4 test used throwaway pins inside rolled-back transactions — actually set a real one now: `psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select set_host_pin('YOUR_REAL_PIN');"`). Click 새 게임 시작 → round shows 0. Manually bump to round 1 for testing: `psql "$SUPABASE_DB_URL" -c "update game_state set current_round = 1 where id = 1;"`. Refresh `/host`, click 거래 일시정지 → status flips to "일시정지" without a page reload (confirms realtime).
+Run: `npm run dev`, open `/host`. Set a real PIN and bump the round for manual testing by writing small one-off `.sql` files and running them with `node scripts/run-sql.mjs` instead of `psql -c`, e.g.:
+
+```bash
+printf "select set_host_pin('YOUR_REAL_PIN');" > /tmp/set-pin.sql
+node scripts/run-sql.mjs /tmp/set-pin.sql
+printf "update game_state set current_round = 1 where id = 1;" > /tmp/bump-round.sql
+node scripts/run-sql.mjs /tmp/bump-round.sql
+```
+
+Enter the same PIN in the UI. Click 새 게임 시작 → round shows 0. After bumping to round 1, refresh `/host`, click 거래 일시정지 → status flips to "일시정지" without a page reload (confirms realtime).
 Expected: every button produces "완료" and the displayed round/pause state updates live.
 
 - [ ] **Step 3: Commit**
@@ -1666,7 +1684,7 @@ export default function DisplayPage() {
 
 - [ ] **Step 2: Manually verify**
 
-Run: `npm run dev`, open `/display` in one tab and `/host` in another. From `/host`, advance the round or use `psql` to insert a test participant with holdings. Confirm `/display` updates its ranking without a manual refresh.
+Run: `npm run dev`, open `/display` in one tab and `/host` in another. From `/host`, advance the round or use `node scripts/run-sql.mjs` (with a small one-off .sql file) to insert a test participant with holdings. Confirm `/display` updates its ranking without a manual refresh.
 Expected: leaderboard reorders live as underlying data changes.
 
 - [ ] **Step 3: Commit**
@@ -1829,7 +1847,7 @@ export default function ParticipantPage() {
 
 - [ ] **Step 3: Manually verify**
 
-Run: `npm run dev`, open `/`. Join with a nickname, buy a stock, confirm cash decreases and the row's implied holding is reflected (check via `psql` against `holdings`). From `/host`, toggle 거래 일시정지 and confirm the participant screen shows the closed-market message and disables buying without a manual refresh. Advance 다음 해 from `/host` and confirm the participant's cash jumps by the liquidation amount.
+Run: `npm run dev`, open `/`. Join with a nickname, buy a stock, confirm cash decreases and the row's implied holding is reflected (check via `node scripts/run-sql.mjs` (with a one-off SELECT .sql file) against `holdings`). From `/host`, toggle 거래 일시정지 and confirm the participant screen shows the closed-market message and disables buying without a manual refresh. Advance 다음 해 from `/host` and confirm the participant's cash jumps by the liquidation amount.
 Expected: all of the above hold true against the real Supabase project.
 
 - [ ] **Step 4: Commit**
