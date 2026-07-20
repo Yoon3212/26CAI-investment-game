@@ -7,6 +7,7 @@ import StockPriceChart from '../components/StockPriceChart'
 import QuantityStepper from '../components/QuantityStepper'
 import Toast from '../components/Toast'
 import type { Stock, StockPrice } from '../lib/types'
+import { logoForStock } from '../lib/stockLogos'
 import './ParticipantPage.css'
 
 const SEED_MONEY = 1200000
@@ -224,14 +225,21 @@ export default function ParticipantPage() {
           <button className="pp-chart-back" onClick={() => setView({ name: 'list' })}>
             ← 종목 리스트로
           </button>
-          <div className="pp-chart-name">{stock.name}</div>
-          {holdingQty ? <div className="pp-stock-holding">보유 {holdingQty}주</div> : null}
-          <div className="pp-chart-price">{currentPrice.toLocaleString()}원</div>
-          {delta !== null && (
-            <span className={delta >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
-              {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toLocaleString()} (전 라운드 대비)
-            </span>
-          )}
+          <div className="pp-chart-header">
+            {logoForStock(stock.name) && (
+              <img className="pp-chart-logo" src={logoForStock(stock.name)} alt="" />
+            )}
+            <div>
+              <div className="pp-chart-name">{stock.name}</div>
+              {holdingQty ? <div className="pp-stock-holding">보유 {holdingQty}주</div> : null}
+              <div className="pp-chart-price">{currentPrice.toLocaleString()}원</div>
+              {delta !== null && (
+                <span className={delta >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
+                  {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toLocaleString()} (전 라운드 대비)
+                </span>
+              )}
+            </div>
+          </div>
         </div>
         <StockPriceChart series={series} />
         <div className="pp-chart-buy">
@@ -318,7 +326,11 @@ export default function ParticipantPage() {
           return (
             <li key={stock.id} className="pp-stock-row">
               <div className="pp-stock-row-main" onClick={() => setExpandedStockId(expanded ? null : stock.id)}>
-                <span className="pp-avatar">{stock.displayOrder}</span>
+                {logoForStock(stock.name) ? (
+                  <img className="pp-avatar-img" src={logoForStock(stock.name)} alt="" />
+                ) : (
+                  <span className="pp-avatar">{stock.displayOrder}</span>
+                )}
                 <div>
                   <div className="pp-stock-name">{stock.name}</div>
                   {holdingQty ? <div className="pp-stock-holding">보유 {holdingQty}주</div> : null}
