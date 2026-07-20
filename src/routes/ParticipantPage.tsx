@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useGameState } from '../hooks/useGameState'
 import BrandBar from '../components/BrandBar'
@@ -27,6 +27,9 @@ type View = { name: 'list' } | { name: 'chart'; stockId: number }
 
 export default function ParticipantPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const chartStockId = searchParams.get('stock')
+  const view: View = chartStockId ? { name: 'chart', stockId: Number(chartStockId) } : { name: 'list' }
   const { gameState, loading } = useGameState()
   const [nicknameInput, setNicknameInput] = useState('')
   const [passwordInput, setPasswordInput] = useState('')
@@ -38,7 +41,6 @@ export default function ParticipantPage() {
   const [holdings, setHoldings] = useState<Record<number, number>>({})
   const [quantities, setQuantities] = useState<Record<number, number>>({})
   const [expandedStockId, setExpandedStockId] = useState<number | null>(null)
-  const [view, setView] = useState<View>({ name: 'list' })
   const [lastRoundProfit, setLastRoundProfit] = useState<number | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
@@ -52,7 +54,7 @@ export default function ParticipantPage() {
       setStocks([])
       setPrices([])
       setRounds([])
-      setView({ name: 'list' })
+      setSearchParams({}, { replace: true })
       return
     }
 
@@ -222,12 +224,18 @@ export default function ParticipantPage() {
       <main className="pp-page">
         <BrandBar />
         <div className="pp-chart-top">
-          <button className="pp-chart-back" onClick={() => setView({ name: 'list' })}>
+          <button className="pp-chart-back" onClick={() => navigate(-1)}>
             ← 종목 리스트로
           </button>
           <div className="pp-chart-header">
             {logoForStock(stock.name) && (
-              <img className="pp-chart-logo" src={logoForStock(stock.name)} alt="" />
+              <img
+                className="pp-chart-logo"
+                src={logoForStock(stock.name)}
+                alt=""
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+              />
             )}
             <div>
               <div className="pp-chart-name">{stock.name}</div>
@@ -241,7 +249,9 @@ export default function ParticipantPage() {
             </div>
           </div>
         </div>
-        <StockPriceChart series={series} />
+        <div className="pp-chart-block">
+          <StockPriceChart series={series} />
+        </div>
         <div className="pp-chart-buy">
           <QuantityStepper
             value={quantity}
@@ -251,7 +261,7 @@ export default function ParticipantPage() {
           />
           <span className="pp-buy-total">{(currentPrice * quantity).toLocaleString()}원</span>
           <button onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
-            이 가격에 매수
+            매수
           </button>
         </div>
         {error && <p className="pp-error">{error}</p>}
@@ -327,7 +337,13 @@ export default function ParticipantPage() {
             <li key={stock.id} className="pp-stock-row">
               <div className="pp-stock-row-main" onClick={() => setExpandedStockId(expanded ? null : stock.id)}>
                 {logoForStock(stock.name) ? (
-                  <img className="pp-avatar-img" src={logoForStock(stock.name)} alt="" />
+                  <img
+                    className="pp-avatar-img"
+                    src={logoForStock(stock.name)}
+                    alt=""
+                    draggable={false}
+                    onContextMenu={(e) => e.preventDefault()}
+                  />
                 ) : (
                   <span className="pp-avatar">{stock.displayOrder}</span>
                 )}
@@ -356,7 +372,10 @@ export default function ParticipantPage() {
                   <button className="pp-buy" onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
                     매수
                   </button>
-                  <button className="pp-chartbtn" onClick={() => setView({ name: 'chart', stockId: stock.id })}>
+                  <button
+                    className="pp-chartbtn"
+                    onClick={() => setSearchParams({ stock: String(stock.id) })}
+                  >
                     차트 보기 →
                   </button>
                 </div>

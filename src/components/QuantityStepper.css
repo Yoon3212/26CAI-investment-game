@@ -3,17 +3,17 @@
   align-items: center;
   gap: 2px;
   border: 1.5px solid var(--pp-line);
-  border-radius: 10px;
+  border-radius: 11px;
   overflow: hidden;
   background: var(--pp-surface);
 }
 .qty-stepper-btn {
-  width: 30px;
-  height: 34px;
+  width: 34px;
+  height: 38px;
   border: none;
   background: var(--pp-surface-2);
   color: var(--pp-ink);
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 700;
   cursor: pointer;
   line-height: 1;
@@ -23,12 +23,12 @@
   cursor: not-allowed;
 }
 .qty-stepper-input {
-  width: 44px;
-  height: 34px;
+  width: 48px;
+  height: 38px;
   border: none;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   color: var(--pp-ink);
   background: var(--pp-surface);
@@ -41,13 +41,13 @@
   background: var(--pp-gain-bg);
 }
 .qty-stepper-max {
-  height: 34px;
-  padding: 0 10px;
+  height: 38px;
+  padding: 0 11px;
   border: none;
   border-left: 1.5px solid var(--pp-line);
   background: var(--pp-surface-2);
   color: var(--pp-accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   cursor: pointer;
 }

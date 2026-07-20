@@ -40,10 +40,18 @@
 
 * { box-sizing: border-box; }
 
+.pp-noselect {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
 .pp-loading {
   padding: 40px;
   text-align: center;
   color: var(--pp-ink-dim);
+  font-size: 15px;
 }
 
 .pp-page {
@@ -59,42 +67,42 @@
 .pp-brandbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 16px 20px;
+  gap: 9px;
+  padding: 17px 20px;
   background: var(--pp-surface);
   box-shadow: var(--pp-shadow);
   position: relative;
   z-index: 1;
 }
 .pp-brandbar .pp-mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
+  width: 25px;
+  height: 25px;
+  border-radius: 8px;
   background: var(--pp-accent);
   color: var(--pp-accent-ink);
   font-weight: 800;
-  font-size: 12px;
+  font-size: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
-.pp-brandbar .pp-word { font-size: 14.5px; font-weight: 800; letter-spacing: -.01em; }
+.pp-brandbar .pp-word { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
 .pp-brandbar .pp-word b { color: var(--pp-accent); }
 
 .pp-join { padding: 48px 24px; text-align: center; }
 .pp-join .pp-kicker {
-  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase;
   color: var(--pp-accent); font-weight: 700; margin-bottom: 10px;
 }
-.pp-join h1 { font-size: 22px; margin: 0 0 10px; text-wrap: balance; }
-.pp-join .pp-sub { color: var(--pp-ink-dim); font-size: 13.5px; line-height: 1.5; margin: 0 0 26px; }
+.pp-join h1 { font-size: 24px; margin: 0 0 10px; text-wrap: balance; }
+.pp-join .pp-sub { color: var(--pp-ink-dim); font-size: 14.5px; line-height: 1.55; margin: 0 0 26px; }
 .pp-join-card {
   background: var(--pp-surface); border-radius: 20px; padding: 22px 20px;
-  box-shadow: var(--pp-shadow); display: flex; flex-direction: column; gap: 12px;
+  box-shadow: var(--pp-shadow); display: flex; flex-direction: column; gap: 13px;
 }
 .pp-join input {
-  width: 100%; font-size: 16px; padding: 14px 16px; border-radius: 12px;
+  width: 100%; font-size: 17px; padding: 15px 16px; border-radius: 12px;
   border: 1.5px solid var(--pp-line); background: var(--pp-bg); color: var(--pp-ink);
   text-align: center; transition: border-color .15s, box-shadow .15s;
 }
@@ -103,7 +111,7 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--pp-accent) 20%, transparent);
 }
 .pp-join button {
-  width: 100%; font-size: 16px; font-weight: 700; padding: 14px;
+  width: 100%; font-size: 17px; font-weight: 700; padding: 15px;
   border-radius: 12px; border: none; background: var(--pp-accent);
   color: var(--pp-accent-ink); cursor: pointer; box-shadow: var(--pp-shadow);
   transition: transform .1s, filter .15s;
@@ -113,37 +121,37 @@
 
 .pp-header {
   margin: 16px 16px 0;
-  padding: 18px 20px 20px;
+  padding: 19px 20px 21px;
   border-radius: 20px;
   background: var(--pp-surface);
   box-shadow: var(--pp-shadow);
 }
 .pp-header .pp-row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
-.pp-header .pp-nick { font-size: 15px; font-weight: 800; }
+.pp-header .pp-nick { font-size: 16.5px; font-weight: 800; }
 .pp-round-badge {
-  font-size: 11.5px; font-weight: 700; color: var(--pp-accent-ink);
-  background: var(--pp-accent); padding: 4px 11px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 700; color: var(--pp-accent-ink);
+  background: var(--pp-accent); padding: 5px 12px; border-radius: 999px;
 }
-.pp-cash-label { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--pp-ink-dim); margin-bottom: 3px; font-weight: 600; }
-.pp-cash-amount { font-variant-numeric: tabular-nums; font-size: 29px; font-weight: 800; letter-spacing: -.01em; }
-.pp-returns-row { display: flex; gap: 8px; margin-top: 10px; }
+.pp-cash-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--pp-ink-dim); margin-bottom: 3px; font-weight: 600; }
+.pp-cash-amount { font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; letter-spacing: -.01em; }
+.pp-returns-row { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
 
 .pp-banner-closed {
   margin: 16px 16px 0; background: var(--pp-closed-bg); color: var(--pp-closed);
-  border-radius: 14px; padding: 12px 16px; font-size: 13px; font-weight: 700;
+  border-radius: 14px; padding: 13px 16px; font-size: 14px; font-weight: 700;
   box-shadow: var(--pp-shadow);
 }
 
-.pp-error { margin: 12px 16px 0; color: var(--pp-loss); font-size: 13px; padding: 0 4px; }
+.pp-error { margin: 12px 16px 0; color: var(--pp-loss); font-size: 14px; padding: 0 4px; }
 
 .pp-listlabel {
-  padding: 2px 4px 10px; font-size: 11.5px; letter-spacing: .06em;
+  padding: 2px 4px 10px; font-size: 12.5px; letter-spacing: .06em;
   text-transform: uppercase; color: var(--pp-ink-dim); font-weight: 700;
 }
 
 .pp-holdings-block {
   margin: 16px 16px 0;
-  padding: 16px 16px 14px;
+  padding: 17px 16px 15px;
   border-radius: 20px;
   background: var(--pp-surface);
   box-shadow: var(--pp-shadow);
@@ -151,8 +159,8 @@
 .pp-holdings-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
 .pp-holdings-row {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 12px; border-radius: 12px; background: var(--pp-surface-2);
-  font-size: 13px;
+  padding: 11px 13px; border-radius: 12px; background: var(--pp-surface-2);
+  font-size: 14px;
 }
 .pp-holdings-name { font-weight: 700; }
 .pp-holdings-qty { color: var(--pp-ink-dim); }
@@ -166,7 +174,7 @@
 
 .pp-card {
   margin: 16px 16px 0;
-  padding: 16px 12px 8px;
+  padding: 17px 12px 8px;
   border-radius: 20px;
   background: var(--pp-surface);
   box-shadow: var(--pp-shadow);
@@ -176,73 +184,89 @@
 .pp-stocklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .pp-stock-row { border-radius: 14px; }
 .pp-stock-row-main {
-  display: grid; grid-template-columns: 32px 1fr auto; align-items: center;
-  gap: 0 10px; padding: 11px 10px; cursor: pointer; border-radius: 14px;
+  display: grid; grid-template-columns: 38px 1fr auto; align-items: center;
+  gap: 0 11px; padding: 12px 10px; cursor: pointer; border-radius: 14px;
   transition: background .12s;
 }
 .pp-stock-row-main:hover { background: var(--pp-surface-2); }
 .pp-stock-row-main:active { background: var(--pp-gain-bg); }
 .pp-avatar {
-  width: 32px; height: 32px; border-radius: 10px; background: var(--pp-surface-2);
-  color: var(--pp-ink-dim); font-weight: 800; font-size: 12px;
+  width: 38px; height: 38px; border-radius: 11px; background: var(--pp-surface-2);
+  color: var(--pp-ink-dim); font-weight: 800; font-size: 13px;
   display: flex; align-items: center; justify-content: center;
 }
 .pp-avatar-img {
-  width: 32px; height: 32px; border-radius: 10px; object-fit: cover;
+  width: 38px; height: 38px; border-radius: 11px; object-fit: cover;
   flex-shrink: 0;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none;
 }
-.pp-stock-name { font-size: 14.5px; font-weight: 700; }
-.pp-stock-holding { font-size: 11.5px; color: var(--pp-buy); font-weight: 700; margin-top: 1px; }
+.pp-stock-name { font-size: 15.5px; font-weight: 700; }
+.pp-stock-holding { font-size: 12.5px; color: var(--pp-buy); font-weight: 700; margin-top: 1px; }
 .pp-stock-pricecol { text-align: right; }
-.pp-stock-price { font-variant-numeric: tabular-nums; font-size: 14.5px; font-weight: 700; }
+.pp-stock-price { font-variant-numeric: tabular-nums; font-size: 15.5px; font-weight: 700; }
 .pp-delta {
-  font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 700;
   padding: 2px 7px; border-radius: 7px; display: inline-block; margin-top: 3px;
 }
 .pp-delta-up { color: var(--pp-buy); background: var(--pp-gain-bg); }
 .pp-delta-down { color: var(--pp-loss); background: var(--pp-loss-bg); }
 
 .pp-buy-total {
-  font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 700; color: var(--pp-ink-dim);
+  font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; color: var(--pp-ink-dim);
 }
 
 .pp-buyrow {
-  display: flex; align-items: center; gap: 8px; padding: 10px 12px 14px 42px; flex-wrap: wrap;
+  display: flex; align-items: center; gap: 8px; padding: 11px 12px 15px 44px; flex-wrap: wrap;
   background: var(--pp-surface-2); border-radius: 0 0 14px 14px; margin-top: -4px;
 }
 .pp-buyrow button.pp-buy {
-  font-size: 13px; font-weight: 700; padding: 9px 18px; border-radius: 10px;
+  font-size: 14.5px; font-weight: 700; padding: 10px 20px; border-radius: 10px;
   border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
   transition: filter .15s;
 }
 .pp-buyrow button.pp-buy:hover:not(:disabled) { filter: brightness(1.08); }
 .pp-buyrow button.pp-buy:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
 .pp-buyrow button.pp-chartbtn {
-  margin-left: auto; font-size: 12.5px; font-weight: 700; color: var(--pp-accent);
+  margin-left: auto; font-size: 13.5px; font-weight: 700; color: var(--pp-accent);
   background: var(--pp-surface); border: 1.5px solid var(--pp-accent); border-radius: 10px;
-  padding: 8px 14px; cursor: pointer; transition: background .15s, color .15s;
+  padding: 9px 15px; cursor: pointer; transition: background .15s, color .15s;
 }
 .pp-buyrow button.pp-chartbtn:hover { background: var(--pp-accent); color: var(--pp-accent-ink); }
 
-.pp-chart-top { padding: 18px 20px 4px; }
-.pp-chart-header { display: flex; align-items: center; gap: 14px; }
-.pp-chart-logo {
-  width: 68px; height: 68px; border-radius: 18px; object-fit: cover;
-  box-shadow: var(--pp-shadow); flex-shrink: 0;
-}
+.pp-chart-top { padding: 18px 16px 4px; }
 .pp-chart-back {
-  font-size: 12.5px; color: var(--pp-ink-dim); cursor: pointer; margin-bottom: 12px;
-  background: none; border: none; padding: 0; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13.5px; color: var(--pp-ink); cursor: pointer; margin-bottom: 14px;
+  background: var(--pp-surface); border: 1.5px solid var(--pp-line); border-radius: 10px;
+  padding: 9px 14px; font-weight: 700; box-shadow: var(--pp-shadow);
+  transition: background .15s;
 }
-.pp-chart-name { font-size: 20px; font-weight: 800; letter-spacing: -.01em; }
-.pp-chart-price { font-variant-numeric: tabular-nums; font-size: 27px; font-weight: 800; margin-top: 4px; }
+.pp-chart-back:hover { background: var(--pp-surface-2); }
+.pp-chart-header { display: flex; align-items: center; gap: 15px; }
+.pp-chart-logo {
+  width: 72px; height: 72px; border-radius: 18px; object-fit: cover;
+  box-shadow: var(--pp-shadow); flex-shrink: 0;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none;
+}
+.pp-chart-name { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+.pp-chart-price { font-variant-numeric: tabular-nums; font-size: 29px; font-weight: 800; margin-top: 4px; }
+
+.pp-chart-block {
+  margin: 16px 16px 0;
+  padding: 16px 12px 12px;
+  border-radius: 20px;
+  background: var(--pp-surface);
+  box-shadow: var(--pp-shadow);
+  overflow: hidden;
+}
+
 .pp-chart-buy {
   display: flex; align-items: center; gap: 10px; margin: 18px 16px 22px;
-  background: var(--pp-surface); border-radius: 18px; padding: 14px 16px;
+  background: var(--pp-surface); border-radius: 18px; padding: 15px 16px;
   box-shadow: var(--pp-shadow); flex-wrap: wrap;
 }
 .pp-chart-buy button {
-  flex: 1; font-size: 14.5px; font-weight: 700; padding: 12px; border-radius: 12px;
+  flex: 1; font-size: 16px; font-weight: 700; padding: 13px; border-radius: 12px;
   border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
   transition: filter .15s;
 }

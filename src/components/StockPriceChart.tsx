@@ -50,7 +50,9 @@ export default function StockPriceChart({ series }: StockPriceChartProps) {
         />
         {points.map((p, i) => {
           const isLast = i === points.length - 1
+          const isFirst = i === 0
           const labelAbove = i % 2 === 0
+          const textAnchor = isFirst ? 'start' : isLast ? 'end' : 'middle'
           return (
             <g key={p.round}>
               <circle
@@ -64,8 +66,8 @@ export default function StockPriceChart({ series }: StockPriceChartProps) {
               <text
                 x={p.x}
                 y={labelAbove ? p.y - 10 : p.y + 18}
-                textAnchor="middle"
-                fontSize={isLast ? 10.5 : 9}
+                textAnchor={textAnchor}
+                fontSize={isLast ? 11 : 9.5}
                 fontWeight={isLast ? 800 : 600}
                 fill={isLast ? 'var(--pp-accent)' : 'var(--pp-ink-dim)'}
               >
