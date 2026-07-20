@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useGameState } from '../hooks/useGameState'
 import BrandBar from '../components/BrandBar'
+import Marquee from '../components/Marquee'
 import StockPriceChart from '../components/StockPriceChart'
 import QuantityStepper from '../components/QuantityStepper'
 import Toast from '../components/Toast'
@@ -223,6 +224,7 @@ export default function ParticipantPage() {
     return (
       <main className="pp-page">
         <BrandBar />
+        <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요" />
         <div className="pp-chart-top">
           <button className="pp-chart-back" onClick={() => navigate(-1)}>
             ← 종목 리스트로
@@ -273,6 +275,7 @@ export default function ParticipantPage() {
   return (
     <main className="pp-page">
       <BrandBar />
+      <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요" />
       <div className="pp-header">
         <div className="pp-row1">
           <span className="pp-nick">{me.nickname}</span>

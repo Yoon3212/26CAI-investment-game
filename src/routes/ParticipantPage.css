@@ -75,17 +75,12 @@
   z-index: 1;
 }
 .pp-brandbar .pp-mark {
-  width: 25px;
-  height: 25px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
-  background: var(--pp-accent);
-  color: var(--pp-accent-ink);
-  font-weight: 800;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  object-fit: cover;
   flex-shrink: 0;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-user-drag: none;
 }
 .pp-brandbar .pp-word { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
 .pp-brandbar .pp-word b { color: var(--pp-accent); }

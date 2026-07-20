@@ -1,0 +1,29 @@
+.pp-marquee {
+  overflow: hidden;
+  background: var(--pp-accent);
+  padding: 9px 0;
+  position: relative;
+  z-index: 1;
+}
+.pp-marquee-track {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: pp-marquee-scroll 16s linear infinite;
+}
+.pp-marquee-track span {
+  padding: 0 32px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--pp-accent-ink);
+}
+
+@keyframes pp-marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-marquee-track {
+    animation: none;
+  }
+}
