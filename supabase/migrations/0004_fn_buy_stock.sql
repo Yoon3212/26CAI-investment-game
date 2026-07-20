@@ -44,11 +44,12 @@ begin
   update participants set cash = participants.cash - v_cost where participants.id = v_participant.id;
 
   begin
-    insert into holdings (participant_id, stock_id, quantity)
-    values (v_participant.id, p_stock_id, p_quantity);
+    insert into holdings (participant_id, stock_id, quantity, total_cost)
+    values (v_participant.id, p_stock_id, p_quantity, v_cost);
   exception when unique_violation then
     update holdings
-    set quantity = holdings.quantity + p_quantity
+    set quantity = holdings.quantity + p_quantity,
+        total_cost = holdings.total_cost + v_cost
     where holdings.participant_id = v_participant.id and holdings.stock_id = p_stock_id;
   end;
 

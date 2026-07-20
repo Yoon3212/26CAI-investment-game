@@ -18,6 +18,12 @@ begin
     raise exception '대기 상태(0)에서만 게임을 시작할 수 있습니다 (현재: %)', v_round;
   end if;
 
+  insert into asset_history (round, year_label, participant_id, nickname, total_assets, round_profit)
+  select 1, (select year_label from rounds where rounds.round = 1), p.id, p.nickname::text, p.cash, 0
+  from participants p
+  on conflict (round, participant_id) do update
+    set total_assets = excluded.total_assets, round_profit = excluded.round_profit, updated_at = now();
+
   update game_state set current_round = 1, is_paused = false, updated_at = now() where id = 1;
 end;
 $$;
