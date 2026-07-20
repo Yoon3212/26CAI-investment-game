@@ -1,0 +1,82 @@
+.disp-page {
+  min-height: 100vh;
+  background: var(--pp-bg);
+  color: var(--pp-ink);
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.disp-loading {
+  padding: 60px;
+  text-align: center;
+  font-size: 24px;
+  color: var(--pp-ink-dim);
+}
+
+.disp-body {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 32px 60px;
+}
+
+.disp-heading {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.disp-kicker {
+  font-size: 14px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--pp-accent);
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.disp-title {
+  font-size: 40px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.disp-rank-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.disp-rank-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 22px;
+  border-radius: 16px;
+  background: var(--pp-surface);
+  border: 1.5px solid var(--pp-line);
+}
+.disp-rank-first {
+  background: var(--pp-gain-bg);
+  border-color: var(--pp-accent);
+}
+.disp-rank-medal {
+  font-size: 30px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-ink-dim);
+}
+.disp-rank-first .disp-rank-medal { color: inherit; }
+.disp-rank-name {
+  font-size: 22px;
+  font-weight: 700;
+}
+.disp-rank-amount {
+  font-variant-numeric: tabular-nums;
+  font-size: 24px;
+  font-weight: 800;
+}
+.disp-rank-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--pp-ink-dim);
+  font-size: 18px;
+}

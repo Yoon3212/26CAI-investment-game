@@ -36,6 +36,12 @@
   }
 }
 
+.pp-loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--pp-ink-dim);
+}
+
 .pp-page {
   max-width: 480px;
   margin: 0 auto;

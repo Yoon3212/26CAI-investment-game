@@ -112,7 +112,7 @@ export default function ParticipantPage() {
     return rounds.find((r) => r.round === round)?.yearLabel
   }
 
-  if (loading || !gameState) return <p>불러오는 중...</p>
+  if (loading || !gameState) return <p className="pp-loading">불러오는 중...</p>
 
   if (!me) {
     return (
