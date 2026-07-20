@@ -173,14 +173,16 @@ export default function ParticipantPage() {
           <p className="pp-sub">
             처음 입장이면 원하는 비밀번호를 새로 설정하세요. 이미 입장했었다면 그때 설정한 비밀번호를 입력하세요.
           </p>
-          <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="예: 1조" />
-          <input
-            type="password"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            placeholder="비밀번호"
-          />
-          <button onClick={join}>입장하기</button>
+          <div className="pp-join-card">
+            <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="예: 1조" />
+            <input
+              type="password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              placeholder="비밀번호"
+            />
+            <button onClick={join}>입장하기</button>
+          </div>
           {error && <p className="pp-error">{error}</p>}
         </div>
       </main>
@@ -279,8 +281,32 @@ export default function ParticipantPage() {
       {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
       {error && <p className="pp-error">{error}</p>}
 
-      <p className="pp-listlabel">종목 (탭하여 매수)</p>
-      <ul className="pp-stocklist">
+      {heldStocks.length > 0 && (
+        <div className="pp-holdings-block">
+          <p className="pp-listlabel">보유 주식</p>
+          <ul className="pp-holdings-list">
+            {heldStocks.map((stock) => {
+              const qty = holdings[stock.id]
+              const price = priceForRound(stock.id, gameState.currentRound) ?? 0
+              return (
+                <li key={stock.id} className="pp-holdings-row">
+                  <span className="pp-holdings-name">{stock.name}</span>
+                  <span className="pp-holdings-qty">{qty}주</span>
+                  <span className="pp-holdings-value">{(qty * price).toLocaleString()}원</span>
+                </li>
+              )
+            })}
+            <li className="pp-holdings-row pp-holdings-total">
+              <span className="pp-holdings-name">합계 총 매수 금액</span>
+              <span className="pp-holdings-value">{currentHoldingsValue.toLocaleString()}원</span>
+            </li>
+          </ul>
+        </div>
+      )}
+
+      <div className="pp-card">
+        <p className="pp-listlabel">종목 (탭하여 매수)</p>
+        <ul className="pp-stocklist">
         {stocks.map((stock) => {
           const price = priceForRound(stock.id, gameState.currentRound) ?? 0
           const prevPrice = priceForRound(stock.id, gameState.currentRound - 1)
@@ -326,31 +352,8 @@ export default function ParticipantPage() {
             </li>
           )
         })}
-      </ul>
-
-      {heldStocks.length > 0 && (
-        <div className="pp-holdings-block">
-          <p className="pp-listlabel">보유 주식</p>
-          <ul className="pp-holdings-list">
-            {heldStocks.map((stock) => {
-              const qty = holdings[stock.id]
-              const price = priceForRound(stock.id, gameState.currentRound) ?? 0
-              return (
-                <li key={stock.id} className="pp-holdings-row">
-                  <span className="pp-holdings-name">{stock.name}</span>
-                  <span className="pp-holdings-qty">{qty}주</span>
-                  <span className="pp-holdings-value">{(qty * price).toLocaleString()}원</span>
-                </li>
-              )
-            })}
-            <li className="pp-holdings-row pp-holdings-total">
-              <span className="pp-holdings-name">합계</span>
-              <span className="pp-holdings-qty">{heldStocks.reduce((sum, s) => sum + holdings[s.id], 0)}주</span>
-              <span className="pp-holdings-value">{currentHoldingsValue.toLocaleString()}원</span>
-            </li>
-          </ul>
-        </div>
-      )}
+        </ul>
+      </div>
 
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
     </main>

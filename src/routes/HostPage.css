@@ -2,7 +2,7 @@
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
-  background: var(--pp-surface);
+  background: var(--pp-bg);
   color: var(--pp-ink);
   font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
 }
@@ -14,19 +14,20 @@
 }
 
 .host-body {
-  padding: 20px 20px 40px;
+  padding: 16px 16px 40px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 16px;
 }
 
 .host-status {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: var(--pp-surface-2);
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: var(--pp-surface);
+  box-shadow: var(--pp-shadow);
 }
 .host-status-round {
   font-size: 17px;
@@ -35,7 +36,7 @@
 .host-pill {
   font-size: 12px;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 11px;
   border-radius: 999px;
 }
 .host-pill-open { color: var(--pp-buy); background: var(--pp-gain-bg); }
@@ -44,17 +45,21 @@
 .host-pin-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
   font-weight: 700;
   color: var(--pp-ink-dim);
   text-transform: uppercase;
   letter-spacing: .06em;
+  background: var(--pp-surface);
+  border-radius: 18px;
+  padding: 16px 18px;
+  box-shadow: var(--pp-shadow);
 }
 .host-pin-input {
   font-size: 16px;
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1.5px solid var(--pp-line);
   background: var(--pp-bg);
   color: var(--pp-ink);
@@ -66,18 +71,25 @@
   border-color: var(--pp-accent);
 }
 
+.host-section {
+  background: var(--pp-surface);
+  border-radius: 18px;
+  padding: 18px 18px 20px;
+  box-shadow: var(--pp-shadow);
+}
+
 .host-actions-label {
   font-size: 11.5px;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
   color: var(--pp-ink-dim);
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 .host-actions-row {
   display: flex;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 .host-actions-row:last-child { margin-bottom: 0; }
@@ -87,19 +99,25 @@
   min-width: 100px;
   font-size: 14px;
   font-weight: 700;
-  padding: 12px 10px;
-  border-radius: 10px;
+  padding: 13px 10px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
+  transition: filter .15s, transform .1s;
 }
+.host-btn:active { transform: scale(0.98); }
 .host-btn-primary { background: var(--pp-accent); color: var(--pp-accent-ink); }
+.host-btn-primary:hover:not(:disabled) { filter: brightness(1.06); }
 .host-btn-primary:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
 .host-btn-secondary { background: var(--pp-surface-2); color: var(--pp-ink); }
+.host-btn-secondary:hover { filter: brightness(0.97); }
 
 .host-danger {
   border: 1.5px solid var(--pp-loss-bg);
-  border-radius: 14px;
-  padding: 14px 16px;
+  border-radius: 18px;
+  padding: 16px 18px;
+  background: var(--pp-surface);
+  box-shadow: var(--pp-shadow);
 }
 .host-danger-label {
   font-size: 11.5px;
@@ -121,8 +139,9 @@
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  padding: 10px;
-  border-radius: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  box-shadow: var(--pp-shadow);
 }
 .host-message-ok { color: var(--pp-buy); background: var(--pp-gain-bg); }
 .host-message-error { color: var(--pp-loss); background: var(--pp-loss-bg); }

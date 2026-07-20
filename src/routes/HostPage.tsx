@@ -47,7 +47,7 @@ export default function HostPage() {
           />
         </label>
 
-        <section>
+        <section className="host-section">
           <div className="host-actions-label">라운드 진행</div>
           <div className="host-actions-row">
             <button

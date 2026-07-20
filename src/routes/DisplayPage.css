@@ -38,10 +38,10 @@
 
 .disp-chart-block {
   background: var(--pp-surface);
-  border: 1.5px solid var(--pp-line);
-  border-radius: 16px;
-  padding: 18px 16px 8px;
+  border-radius: 20px;
+  padding: 20px 18px 10px;
   margin-bottom: 28px;
+  box-shadow: var(--pp-shadow);
 }
 .disp-chart-label {
   font-size: 12px;
@@ -66,13 +66,13 @@
   align-items: center;
   gap: 14px;
   padding: 16px 22px;
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--pp-surface);
-  border: 1.5px solid var(--pp-line);
+  box-shadow: var(--pp-shadow);
 }
 .disp-rank-first {
   background: var(--pp-gain-bg);
-  border-color: var(--pp-accent);
+  box-shadow: var(--pp-shadow), 0 0 0 1.5px var(--pp-accent) inset;
 }
 .disp-rank-medal {
   font-size: 30px;
