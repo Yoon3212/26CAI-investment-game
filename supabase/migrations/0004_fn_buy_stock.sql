@@ -21,7 +21,7 @@ begin
     raise exception '거래가 일시정지되었습니다';
   end if;
 
-  if v_round < 1 or v_round > 10 then
+  if v_round < 1 or v_round > 11 then
     raise exception '현재 매수할 수 있는 라운드가 아닙니다';
   end if;
 

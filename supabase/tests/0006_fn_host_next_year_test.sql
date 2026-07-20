@@ -37,12 +37,12 @@ select pg_temp.test_assert(
   'holdings cleared after liquidation'
 );
 
-update game_state set current_round = 10 where id = 1;
+update game_state set current_round = 11 where id = 1;
 do $$
 begin
   begin
     perform host_next_year('1111');
-    raise exception 'should not reach here: advancing past round 10 was allowed';
+    raise exception 'should not reach here: advancing past round 11 was allowed';
   exception when others then
     if sqlerrm not like '%진행할 수 없는%' then
       raise exception 'unexpected error: %', sqlerrm;

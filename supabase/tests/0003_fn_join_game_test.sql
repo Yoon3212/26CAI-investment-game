@@ -14,7 +14,7 @@ select pg_temp.test_assert(
   'existing nickname returns the same participant (login) without resetting cash'
 );
 
-update game_state set current_round = 11 where id = 1;
+update game_state set current_round = 12 where id = 1;
 
 do $$
 begin

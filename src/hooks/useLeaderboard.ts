@@ -9,7 +9,7 @@ export function useLeaderboard(currentRound: number) {
     let active = true
 
     async function load() {
-      const round = Math.min(Math.max(currentRound, 1), 10)
+      const round = Math.min(Math.max(currentRound, 1), 11)
 
       const [{ data: participants }, { data: holdings }, { data: prices }] = await Promise.all([
         supabase.from('participants').select('id, nickname, cash'),

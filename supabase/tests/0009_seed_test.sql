@@ -4,13 +4,13 @@ select pg_temp.test_assert(
 );
 
 select pg_temp.test_assert(
-  (select count(*) from rounds) = 10,
-  '10 rounds seeded'
+  (select count(*) from rounds) = 11,
+  '11 rounds seeded'
 );
 
 select pg_temp.test_assert(
-  (select count(*) from stock_prices) = 70,
-  '70 stock_prices rows seeded (7 stocks x 10 rounds)'
+  (select count(*) from stock_prices) = 77,
+  '77 stock_prices rows seeded (7 stocks x 11 rounds)'
 );
 
 select pg_temp.test_assert(

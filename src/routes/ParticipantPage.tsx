@@ -33,7 +33,7 @@ export default function ParticipantPage() {
   const [view, setView] = useState<View>({ name: 'list' })
 
   useEffect(() => {
-    if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 10) return
+    if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 11) return
 
     async function loadStocksAndPrices() {
       const [{ data: stockRows }, { data: priceRows }, { data: roundRows }] = await Promise.all([
@@ -130,7 +130,7 @@ export default function ParticipantPage() {
     )
   }
 
-  if (gameState.currentRound === 11) {
+  if (gameState.currentRound === 12) {
     return (
       <main className="pp-page">
         <BrandBar />

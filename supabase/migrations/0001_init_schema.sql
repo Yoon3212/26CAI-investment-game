@@ -3,7 +3,7 @@ create extension if not exists pgcrypto;
 
 create table game_state (
   id int primary key default 1 check (id = 1),
-  current_round int not null default 0 check (current_round between 0 and 11),
+  current_round int not null default 0 check (current_round between 0 and 12),
   is_paused boolean not null default false,
   updated_at timestamptz not null default now()
 );
@@ -16,7 +16,7 @@ create table stocks (
 );
 
 create table rounds (
-  round int primary key check (round between 1 and 10),
+  round int primary key check (round between 1 and 11),
   year_label int not null
 );
 

@@ -15,7 +15,7 @@ begin
 
   select current_round into v_round from game_state where id = 1;
 
-  if v_round < 1 or v_round >= 10 then
+  if v_round < 1 or v_round >= 11 then
     raise exception '다음 해로 진행할 수 없는 라운드입니다 (현재: %)', v_round;
   end if;
 

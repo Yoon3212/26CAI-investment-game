@@ -13,7 +13,7 @@ begin
   end if;
 
   select current_round into v_round from game_state where game_state.id = 1;
-  if v_round = 11 then
+  if v_round = 12 then
     raise exception '게임이 이미 종료되었습니다';
   end if;
 

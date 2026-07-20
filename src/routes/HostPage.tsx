@@ -6,7 +6,7 @@ import './HostPage.css'
 
 const ROUND_LABELS: Record<number, string> = {
   0: '대기 중 (게임 시작 전)',
-  11: '게임 종료',
+  12: '게임 종료',
 }
 
 export default function HostPage() {
@@ -59,14 +59,14 @@ export default function HostPage() {
             <button
               className="host-btn host-btn-primary"
               onClick={() => callHostRpc('host_next_year')}
-              disabled={gameState.currentRound < 1 || gameState.currentRound >= 10}
+              disabled={gameState.currentRound < 1 || gameState.currentRound >= 11}
             >
               다음 해
             </button>
             <button
               className="host-btn host-btn-primary"
               onClick={() => callHostRpc('host_end_game')}
-              disabled={gameState.currentRound !== 10}
+              disabled={gameState.currentRound !== 11}
             >
               게임 종료
             </button>

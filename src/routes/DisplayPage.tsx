@@ -11,7 +11,7 @@ export default function DisplayPage() {
 
   if (loading || !gameState) return <p className="disp-loading">불러오는 중...</p>
 
-  const isEnded = gameState.currentRound === 11
+  const isEnded = gameState.currentRound === 12
 
   return (
     <main className="disp-page">
