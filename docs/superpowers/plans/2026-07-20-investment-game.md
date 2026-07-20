@@ -14,6 +14,7 @@
 - 10 rounds total. Internally modeled as `rounds.round` (1–10) with a separate `rounds.year_label` display column — do **not** derive the calendar year by arithmetic from the round number (2016–2026 is 11 calendar years for 10 rounds, which is an off-by-one trap). Real year labels and the 7 stock names/prices will be supplied later; until then, seed data is clearly marked placeholder.
 - Every table has RLS enabled with SELECT-only policies for anon/authenticated. All writes happen exclusively through `SECURITY DEFINER` RPC functions — never add a client-side INSERT/UPDATE/DELETE against these tables.
 - Host actions (`host_next_year`, `host_end_game`, `host_toggle_pause`, `host_reset_game`) take a `p_pin text` argument and verify it server-side against a bcrypt hash in `host_config` (via pgcrypto). Never store the PIN in plaintext or in frontend code.
+- On this Supabase project, `pgcrypto` functions (`crypt`, `gen_salt`) live in the `extensions` schema, not `public`. Any RPC that calls them needs `set search_path = public, extensions` (not just `public`) — discovered while implementing Task 4 (`set_host_pin`) and applied there and to every host_* RPC that calls `crypt()`.
 - Trading pause auto-clears (`is_paused = false`) whenever `host_next_year` runs — each new round starts open.
 - Money is `bigint`/`int` (원, no decimals). Starting cash is 1,200,000.
 - All SQL migrations and tests run via `node scripts/run-sql.mjs <file>` against the real Supabase Postgres instance (no local Docker stack assumed).
@@ -504,7 +505,7 @@ create or replace function set_host_pin(p_new_pin text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_existing text;
@@ -846,7 +847,7 @@ create or replace function host_toggle_pause(p_pin text, p_paused boolean)
 returns boolean
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_pin_hash text;
@@ -938,7 +939,7 @@ create or replace function host_next_year(p_pin text)
 returns int
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_round int;
@@ -1068,7 +1069,7 @@ create or replace function host_end_game(p_pin text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_round int;
@@ -1190,7 +1191,7 @@ create or replace function host_reset_game(p_pin text)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   v_pin_hash text;
