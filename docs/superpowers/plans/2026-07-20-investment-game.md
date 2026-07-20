@@ -878,6 +878,7 @@ Expected: exits 0, prints `CREATE FUNCTION`.
 ```sql
 begin;
 
+update host_config set pin_hash = null where id = 1;
 select set_host_pin('4321');
 
 select pg_temp.test_assert(
@@ -990,6 +991,7 @@ Expected: exits 0, prints `CREATE FUNCTION`.
 ```sql
 begin;
 
+update host_config set pin_hash = null where id = 1;
 select set_host_pin('1111');
 
 insert into stocks (id, name, display_order) overriding system value values (902, '넥스트종목', 1);
@@ -1117,6 +1119,7 @@ Expected: exits 0, prints `CREATE FUNCTION`.
 ```sql
 begin;
 
+update host_config set pin_hash = null where id = 1;
 select set_host_pin('2222');
 
 insert into stocks (id, name, display_order) overriding system value values (903, '엔드종목', 1);
@@ -1223,6 +1226,7 @@ Expected: exits 0, prints `CREATE FUNCTION`.
 ```sql
 begin;
 
+update host_config set pin_hash = null where id = 1;
 select set_host_pin('3333');
 
 insert into stocks (id, name, display_order) overriding system value values (904, '리셋종목', 1);
