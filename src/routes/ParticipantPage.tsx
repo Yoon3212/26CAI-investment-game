@@ -12,6 +12,7 @@ import { logoForStock } from '../lib/stockLogos'
 import './ParticipantPage.css'
 
 const SEED_MONEY = 1200000
+const SESSION_KEY = 'cai-participant-id'
 
 interface Me {
   id: string
@@ -119,6 +120,24 @@ export default function ParticipantPage() {
     refreshLastRoundProfit(me.id)
   }, [me?.id, gameState?.currentRound])
 
+  useEffect(() => {
+    // Restore the session on remount (e.g. navigating to /display and back)
+    // so an in-app route change doesn't look like a logout. sessionStorage
+    // (not localStorage) is intentional: a closed tab or a different
+    // browser still has to re-enter the password, as originally designed.
+    const savedId = sessionStorage.getItem(SESSION_KEY)
+    if (!savedId) return
+    supabase
+      .from('participants')
+      .select('id, nickname, cash')
+      .eq('id', savedId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
+        else sessionStorage.removeItem(SESSION_KEY)
+      })
+  }, [])
+
   async function join() {
     setError(null)
     const { data, error } = await supabase
@@ -129,6 +148,7 @@ export default function ParticipantPage() {
       return
     }
     setMe(data as Me)
+    sessionStorage.setItem(SESSION_KEY, (data as Me).id)
   }
 
   async function buy(stockId: number) {
