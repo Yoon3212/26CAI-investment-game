@@ -79,7 +79,9 @@ export default function ParticipantPage() {
 
   useEffect(() => {
     if (gameState?.currentRound === 12) {
-      navigate('/display')
+      // replace, not push: once the game has ended there is nothing to
+      // "come back" to, so don't leave a trading-screen entry in history.
+      navigate('/display', { replace: true })
     }
   }, [gameState?.currentRound, navigate])
 
@@ -172,13 +174,13 @@ export default function ParticipantPage() {
       <main className="pp-page">
         <BrandBar />
         <div className="pp-join">
-          <p className="pp-kicker">모의 투자 레크리에이션</p>
-          <h1>닉네임으로 입장하세요</h1>
+          <p className="pp-kicker">CAI 모의 투자 대회</p>
+          <h1>팀명으로 입장하세요</h1>
           <p className="pp-sub">
-            처음 입장이면 원하는 비밀번호를 새로 설정하세요. 이미 입장했었다면 그때 설정한 비밀번호를 입력하세요.
+            처음 입장이면 원하는 비밀번호를 새로 설정하세요. <br/> 이미 입장했었다면 그때 설정한 비밀번호를 입력하세요.
           </p>
           <div className="pp-join-card">
-            <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="예: 1조" />
+            <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="1조" />
             <input
               type="password"
               value={passwordInput}
@@ -279,9 +281,14 @@ export default function ParticipantPage() {
       <div className="pp-header">
         <div className="pp-row1">
           <span className="pp-nick">{me.nickname}</span>
-          <span className="pp-round-badge">
-            {yearLabelForRound(gameState.currentRound) ?? ''}년 · {gameState.currentRound}라운드
-          </span>
+          <div className="pp-row1-right">
+            <button className="pp-rank-btn" onClick={() => navigate('/display')}>
+              순위 보기
+            </button>
+            <span className="pp-round-badge">
+              {yearLabelForRound(gameState.currentRound) ?? ''}년 · {gameState.currentRound}라운드
+            </span>
+          </div>
         </div>
         <div className="pp-cash-label">시드머니</div>
         <div className="pp-cash-amount">{me.cash.toLocaleString()}원</div>

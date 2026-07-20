@@ -121,8 +121,16 @@
   background: var(--pp-surface);
   box-shadow: var(--pp-shadow);
 }
-.pp-header .pp-row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+.pp-header .pp-row1 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .pp-header .pp-nick { font-size: 16.5px; font-weight: 800; }
+.pp-row1-right { display: flex; align-items: center; gap: 8px; }
+.pp-rank-btn {
+  font-size: 12px; font-weight: 700; color: var(--pp-ink);
+  background: var(--pp-surface-2); border: 1.5px solid var(--pp-line);
+  border-radius: 999px; padding: 6px 12px; cursor: pointer;
+  transition: background .15s;
+}
+.pp-rank-btn:hover { background: var(--pp-line); }
 .pp-round-badge {
   font-size: 12.5px; font-weight: 700; color: var(--pp-accent-ink);
   background: var(--pp-accent); padding: 5px 12px; border-radius: 999px;

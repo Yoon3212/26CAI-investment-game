@@ -18,6 +18,15 @@
   padding: 40px 32px 60px;
 }
 
+.disp-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 13.5px; font-weight: 700; color: var(--pp-ink);
+  background: var(--pp-surface); border: 1.5px solid var(--pp-line); border-radius: 10px;
+  padding: 9px 14px; cursor: pointer; box-shadow: var(--pp-shadow);
+  margin-bottom: 18px; transition: background .15s;
+}
+.disp-back:hover { background: var(--pp-surface-2); }
+
 .disp-heading {
   text-align: center;
   margin-bottom: 36px;
