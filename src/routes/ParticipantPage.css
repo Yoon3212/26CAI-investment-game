@@ -101,6 +101,7 @@
 }
 .pp-cash-label { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--pp-ink-dim); margin-bottom: 2px; }
 .pp-cash-amount { font-variant-numeric: tabular-nums; font-size: 27px; font-weight: 700; }
+.pp-returns-row { display: flex; gap: 8px; margin-top: 8px; }
 
 .pp-banner-closed {
   margin: 14px 20px 0; background: var(--pp-closed-bg); color: var(--pp-closed);
@@ -137,43 +138,26 @@
 .pp-delta-up { color: var(--pp-buy); background: var(--pp-gain-bg); }
 .pp-delta-down { color: var(--pp-loss); background: var(--pp-loss-bg); }
 
-.pp-buyrow { display: flex; align-items: center; gap: 8px; padding: 8px 10px 12px 40px; }
-.pp-buyrow input {
-  width: 60px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px;
-  padding: 8px 4px; border-radius: 8px; border: 1.5px solid var(--pp-line);
-  background: var(--pp-surface); color: var(--pp-ink);
-}
+.pp-buyrow { display: flex; align-items: center; gap: 8px; padding: 8px 10px 12px 40px; flex-wrap: wrap; }
 .pp-buyrow button.pp-buy {
   font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 8px;
   border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
 }
 .pp-buyrow button.pp-buy:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
-.pp-buyrow button.pp-chartlink {
-  margin-left: auto; font-size: 12px; font-weight: 700; color: var(--pp-accent);
-  background: none; border: none; cursor: pointer;
+.pp-buyrow button.pp-chartbtn {
+  margin-left: auto; font-size: 12.5px; font-weight: 700; color: var(--pp-accent);
+  background: var(--pp-gain-bg); border: 1.5px solid var(--pp-accent); border-radius: 8px;
+  padding: 8px 14px; cursor: pointer;
 }
+.pp-buyrow button.pp-chartbtn:hover { background: var(--pp-accent); color: var(--pp-accent-ink); }
 
 .pp-chart-top { padding: 14px 20px 4px; }
 .pp-chart-back { font-size: 12.5px; color: var(--pp-ink-dim); cursor: pointer; margin-bottom: 10px; background: none; border: none; padding: 0; }
 .pp-chart-name { font-size: 19px; font-weight: 800; }
 .pp-chart-price { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 800; margin-top: 4px; }
 .pp-chart-buy { display: flex; align-items: center; gap: 10px; margin: 16px 20px 22px; }
-.pp-chart-buy input {
-  width: 70px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px;
-  padding: 11px 4px; border-radius: 10px; border: 1.5px solid var(--pp-line);
-  background: var(--pp-surface); color: var(--pp-ink);
-}
 .pp-chart-buy button {
   flex: 1; font-size: 14.5px; font-weight: 700; padding: 12px; border-radius: 10px;
   border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
 }
 .pp-chart-buy button:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
-
-.pp-ended { padding: 40px 28px; text-align: center; }
-.pp-ended .pp-kicker {
-  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
-  color: var(--pp-accent); font-weight: 700; margin-bottom: 10px;
-}
-.pp-ended h1 { font-size: 21px; margin: 0 0 24px; }
-.pp-final-amount { font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; margin-bottom: 4px; }
-.pp-final-label { font-size: 13px; color: var(--pp-ink-dim); }

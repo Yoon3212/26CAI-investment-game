@@ -1,17 +1,66 @@
+import { useEffect, useMemo, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
 import { useGameState } from '../hooks/useGameState'
 import { useLeaderboard } from '../hooks/useLeaderboard'
 import BrandBar from '../components/BrandBar'
+import AssetHistoryChart from '../components/AssetHistoryChart'
+import type { AssetHistoryEntry } from '../lib/types'
 import './DisplayPage.css'
 
 const MEDALS = ['🥇', '🥈', '🥉']
+const SERIES_COLORS = ['#3b82f6', '#a855f7', '#0d9488', '#ea580c', '#db2777', '#64748b', '#4338ca', '#84702c']
 
 export default function DisplayPage() {
   const { gameState, loading } = useGameState()
   const entries = useLeaderboard(gameState?.currentRound ?? 0)
+  const [rounds, setRounds] = useState<{ round: number; yearLabel: number }[]>([])
+  const [history, setHistory] = useState<AssetHistoryEntry[]>([])
+
+  useEffect(() => {
+    supabase
+      .from('rounds')
+      .select('round, year_label')
+      .order('round')
+      .then(({ data }) => setRounds((data ?? []).map((r) => ({ round: r.round, yearLabel: r.year_label }))))
+  }, [])
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('asset_history')
+        .select('round, year_label, participant_id, nickname, total_assets, round_profit')
+        .order('round')
+      setHistory(
+        (data ?? []).map((d) => ({
+          round: d.round,
+          yearLabel: d.year_label,
+          participantId: d.participant_id,
+          nickname: d.nickname,
+          totalAssets: d.total_assets,
+          roundProfit: d.round_profit,
+        })),
+      )
+    }
+    load()
+  }, [gameState?.currentRound])
+
+  const series = useMemo(() => {
+    const byNickname = new Map<string, { round: number; yearLabel: number; totalAssets: number }[]>()
+    for (const h of history) {
+      if (!byNickname.has(h.nickname)) byNickname.set(h.nickname, [])
+      byNickname.get(h.nickname)!.push({ round: h.round, yearLabel: h.yearLabel, totalAssets: h.totalAssets })
+    }
+    return Array.from(byNickname.entries()).map(([nickname, points], i) => ({
+      nickname,
+      color: SERIES_COLORS[i % SERIES_COLORS.length],
+      points: [...points].sort((a, b) => a.round - b.round),
+    }))
+  }, [history])
 
   if (loading || !gameState) return <p className="disp-loading">불러오는 중...</p>
 
   const isEnded = gameState.currentRound === 12
+  const yearLabel = rounds.find((r) => r.round === (isEnded ? 11 : gameState.currentRound))?.yearLabel
 
   return (
     <main className="disp-page">
@@ -19,7 +68,14 @@ export default function DisplayPage() {
       <div className="disp-body">
         <div className="disp-heading">
           <div className="disp-kicker">{isEnded ? '게임 종료' : '진행 중'}</div>
-          <h1 className="disp-title">{isEnded ? '최종 순위' : `${gameState.currentRound}라운드`}</h1>
+          <h1 className="disp-title">
+            {isEnded ? '최종 순위' : `${yearLabel ?? ''}년 · ${gameState.currentRound}라운드`}
+          </h1>
+        </div>
+
+        <div className="disp-chart-block">
+          <div className="disp-chart-label">팀별 누적 자산 추이</div>
+          <AssetHistoryChart series={series} />
         </div>
 
         <ol className="disp-rank-list">

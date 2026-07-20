@@ -14,7 +14,8 @@ export default function HostPage() {
   const [pin, setPin] = useState('')
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
 
-  async function callHostRpc(fn: string, extraArgs: Record<string, unknown> = {}) {
+  async function callHostRpc(confirmMessage: string, fn: string, extraArgs: Record<string, unknown> = {}) {
+    if (!window.confirm(confirmMessage)) return
     setMessage(null)
     const { error } = await supabase.rpc(fn, { p_pin: pin, ...extraArgs })
     setMessage(error ? { text: error.message, ok: false } : { text: '완료', ok: true })
@@ -51,21 +52,28 @@ export default function HostPage() {
           <div className="host-actions-row">
             <button
               className="host-btn host-btn-primary"
-              onClick={() => callHostRpc('host_start_game')}
+              onClick={() => callHostRpc('게임을 시작할까요? (1라운드부터 거래가 열립니다)', 'host_start_game')}
               disabled={gameState.currentRound !== 0}
             >
               게임 시작
             </button>
             <button
               className="host-btn host-btn-primary"
-              onClick={() => callHostRpc('host_next_year')}
+              onClick={() =>
+                callHostRpc(
+                  '다음 해로 넘어갈까요? 보유 주식이 새 가격에 자동 매도됩니다.',
+                  'host_next_year',
+                )
+              }
               disabled={gameState.currentRound < 1 || gameState.currentRound >= 11}
             >
               다음 해
             </button>
             <button
               className="host-btn host-btn-primary"
-              onClick={() => callHostRpc('host_end_game')}
+              onClick={() =>
+                callHostRpc('게임을 종료할까요? 남은 보유 주식이 최종 청산됩니다.', 'host_end_game')
+              }
               disabled={gameState.currentRound !== 11}
             >
               게임 종료
@@ -76,7 +84,13 @@ export default function HostPage() {
           <div className="host-actions-row">
             <button
               className="host-btn host-btn-secondary"
-              onClick={() => callHostRpc('host_toggle_pause', { p_paused: !gameState.isPaused })}
+              onClick={() =>
+                callHostRpc(
+                  gameState.isPaused ? '거래를 재개할까요?' : '거래를 일시정지할까요?',
+                  'host_toggle_pause',
+                  { p_paused: !gameState.isPaused },
+                )
+              }
             >
               {gameState.isPaused ? '거래 재개' : '거래 일시정지'}
             </button>
@@ -85,7 +99,15 @@ export default function HostPage() {
 
         <section className="host-danger">
           <div className="host-danger-label">위험 구역</div>
-          <button className="host-btn host-btn-danger" onClick={() => callHostRpc('host_reset_game')}>
+          <button
+            className="host-btn host-btn-danger"
+            onClick={() =>
+              callHostRpc(
+                '정말 새 게임을 시작할까요? 모든 참가자와 기록이 완전히 삭제됩니다. 되돌릴 수 없습니다.',
+                'host_reset_game',
+              )
+            }
+          >
             새 게임 시작 (전체 초기화)
           </button>
         </section>

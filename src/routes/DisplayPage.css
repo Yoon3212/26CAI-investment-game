@@ -36,6 +36,22 @@
   margin: 0;
 }
 
+.disp-chart-block {
+  background: var(--pp-surface);
+  border: 1.5px solid var(--pp-line);
+  border-radius: 16px;
+  padding: 18px 16px 8px;
+  margin-bottom: 28px;
+}
+.disp-chart-label {
+  font-size: 12px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--pp-ink-dim);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
 .disp-rank-list {
   list-style: none;
   margin: 0;

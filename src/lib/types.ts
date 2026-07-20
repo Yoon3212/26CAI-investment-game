@@ -33,3 +33,12 @@ export interface LeaderboardEntry {
   stockValue: number
   totalAssets: number
 }
+
+export interface AssetHistoryEntry {
+  round: number
+  yearLabel: number
+  participantId: string
+  nickname: string
+  totalAssets: number
+  roundProfit: number
+}

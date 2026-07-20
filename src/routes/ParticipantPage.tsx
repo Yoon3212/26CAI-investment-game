@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useGameState } from '../hooks/useGameState'
 import BrandBar from '../components/BrandBar'
 import StockPriceChart from '../components/StockPriceChart'
+import QuantityStepper from '../components/QuantityStepper'
+import Toast from '../components/Toast'
 import type { Stock, StockPrice } from '../lib/types'
 import './ParticipantPage.css'
+
+const SEED_MONEY = 1200000
 
 interface Me {
   id: string
@@ -20,6 +25,7 @@ interface RoundInfo {
 type View = { name: 'list' } | { name: 'chart'; stockId: number }
 
 export default function ParticipantPage() {
+  const navigate = useNavigate()
   const { gameState, loading } = useGameState()
   const [nicknameInput, setNicknameInput] = useState('')
   const [me, setMe] = useState<Me | null>(null)
@@ -31,6 +37,8 @@ export default function ParticipantPage() {
   const [quantities, setQuantities] = useState<Record<number, number>>({})
   const [expandedStockId, setExpandedStockId] = useState<number | null>(null)
   const [view, setView] = useState<View>({ name: 'list' })
+  const [lastRoundProfit, setLastRoundProfit] = useState<number | null>(null)
+  const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 11) {
@@ -62,6 +70,12 @@ export default function ParticipantPage() {
     loadStocksAndPrices()
   }, [gameState?.currentRound])
 
+  useEffect(() => {
+    if (gameState?.currentRound === 12) {
+      navigate('/display')
+    }
+  }, [gameState?.currentRound, navigate])
+
   async function refreshHoldings(participantId: string) {
     const { data } = await supabase.from('holdings').select('stock_id, quantity').eq('participant_id', participantId)
     const map: Record<number, number> = {}
@@ -78,10 +92,22 @@ export default function ParticipantPage() {
     if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
   }
 
+  async function refreshLastRoundProfit(participantId: string) {
+    const { data } = await supabase
+      .from('asset_history')
+      .select('round_profit')
+      .eq('participant_id', participantId)
+      .order('round', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    setLastRoundProfit(data ? data.round_profit : null)
+  }
+
   useEffect(() => {
     if (!me) return
     refreshHoldings(me.id)
     refreshMe(me.id)
+    refreshLastRoundProfit(me.id)
   }, [me?.id, gameState?.currentRound])
 
   async function join() {
@@ -95,10 +121,12 @@ export default function ParticipantPage() {
   }
 
   async function buy(stockId: number) {
-    if (!me) return
-    const quantity = quantities[stockId] ?? 0
+    if (!me || !gameState) return
+    const quantity = quantities[stockId] ?? 1
     if (quantity <= 0) return
     setError(null)
+    const price = priceForRound(stockId, gameState.currentRound) ?? 0
+    const stockName = stocks.find((s) => s.id === stockId)?.name ?? '종목'
     const { error } = await supabase.rpc('buy_stock', {
       p_nickname: me.nickname,
       p_stock_id: stockId,
@@ -108,6 +136,7 @@ export default function ParticipantPage() {
       setError(error.message)
       return
     }
+    setToastMessage(`${stockName} ${quantity}주 매수 — 총 ${(price * quantity).toLocaleString()}원`)
     const { data } = await supabase.from('participants').select('id, nickname, cash').eq('id', me.id).single()
     if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
     await refreshHoldings(me.id)
@@ -140,18 +169,15 @@ export default function ParticipantPage() {
   }
 
   if (gameState.currentRound === 12) {
-    return (
-      <main className="pp-page">
-        <BrandBar />
-        <div className="pp-ended">
-          <p className="pp-kicker">게임 종료</p>
-          <h1>10년간의 투자가 끝났습니다</h1>
-          <p className="pp-final-amount">{me.cash.toLocaleString()}원</p>
-          <p className="pp-final-label">{me.nickname}님의 최종 자산</p>
-        </div>
-      </main>
-    )
+    return <p className="pp-loading">게임 결과로 이동 중...</p>
   }
+
+  const currentHoldingsValue = Object.entries(holdings).reduce((sum, [stockIdStr, qty]) => {
+    const price = priceForRound(Number(stockIdStr), gameState.currentRound) ?? 0
+    return sum + qty * price
+  }, 0)
+  const totalAssets = me.cash + currentHoldingsValue
+  const returnRate = ((totalAssets - SEED_MONEY) / SEED_MONEY) * 100
 
   if (view.name === 'chart') {
     const stock = stocks.find((s) => s.id === view.stockId)
@@ -166,6 +192,8 @@ export default function ParticipantPage() {
       yearLabel: r.yearLabel,
       price: priceForRound(stock.id, r.round) ?? 0,
     }))
+    const holdingQty = holdings[stock.id]
+    const quantity = quantities[stock.id] ?? 1
 
     return (
       <main className="pp-page">
@@ -175,6 +203,7 @@ export default function ParticipantPage() {
             ← 종목 리스트로
           </button>
           <div className="pp-chart-name">{stock.name}</div>
+          {holdingQty ? <div className="pp-stock-holding">보유 {holdingQty}주</div> : null}
           <div className="pp-chart-price">{currentPrice.toLocaleString()}원</div>
           {delta !== null && (
             <span className={delta >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
@@ -184,11 +213,9 @@ export default function ParticipantPage() {
         </div>
         <StockPriceChart series={series} />
         <div className="pp-chart-buy">
-          <input
-            type="number"
-            min={1}
-            value={quantities[stock.id] ?? ''}
-            onChange={(e) => setQuantities((prev) => ({ ...prev, [stock.id]: Number(e.target.value) }))}
+          <QuantityStepper
+            value={quantity}
+            onChange={(next) => setQuantities((prev) => ({ ...prev, [stock.id]: next }))}
             disabled={gameState.isPaused}
           />
           <button onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
@@ -196,6 +223,7 @@ export default function ParticipantPage() {
           </button>
         </div>
         {error && <p className="pp-error">{error}</p>}
+        {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
       </main>
     )
   }
@@ -210,8 +238,20 @@ export default function ParticipantPage() {
             {yearLabelForRound(gameState.currentRound) ?? ''}년 · {gameState.currentRound}라운드
           </span>
         </div>
-        <div className="pp-cash-label">보유 현금</div>
+        <div className="pp-cash-label">시드머니</div>
         <div className="pp-cash-amount">{me.cash.toLocaleString()}원</div>
+        <div className="pp-returns-row">
+          <span className={returnRate >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
+            처음 대비 {returnRate >= 0 ? '+' : ''}
+            {returnRate.toFixed(1)}%
+          </span>
+          {lastRoundProfit !== null && (
+            <span className={lastRoundProfit >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
+              직전 거래 {lastRoundProfit >= 0 ? '+' : ''}
+              {lastRoundProfit.toLocaleString()}원
+            </span>
+          )}
+        </div>
       </div>
 
       {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
@@ -225,6 +265,7 @@ export default function ParticipantPage() {
           const delta = prevPrice !== undefined ? price - prevPrice : null
           const expanded = expandedStockId === stock.id
           const holdingQty = holdings[stock.id]
+          const quantity = quantities[stock.id] ?? 1
 
           return (
             <li key={stock.id} className="pp-stock-row">
@@ -245,17 +286,15 @@ export default function ParticipantPage() {
               </div>
               {expanded && (
                 <div className="pp-buyrow">
-                  <input
-                    type="number"
-                    min={1}
-                    value={quantities[stock.id] ?? ''}
-                    onChange={(e) => setQuantities((prev) => ({ ...prev, [stock.id]: Number(e.target.value) }))}
+                  <QuantityStepper
+                    value={quantity}
+                    onChange={(next) => setQuantities((prev) => ({ ...prev, [stock.id]: next }))}
                     disabled={gameState.isPaused}
                   />
                   <button className="pp-buy" onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
                     매수
                   </button>
-                  <button className="pp-chartlink" onClick={() => setView({ name: 'chart', stockId: stock.id })}>
+                  <button className="pp-chartbtn" onClick={() => setView({ name: 'chart', stockId: stock.id })}>
                     차트 보기 →
                   </button>
                 </div>
@@ -264,6 +303,7 @@ export default function ParticipantPage() {
           )
         })}
       </ul>
+      {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
     </main>
   )
 }
