@@ -1706,32 +1706,308 @@ git commit -m "feat(fe): implement public leaderboard display"
 
 ---
 
-### Task 16: Participant screen (`/`) — ⚠️ requires user approval before implementation
+### Task 16: Participant screen (`/`) — approved design, ready to implement
 
-**This task must not be executed straight through.** Before writing/committing the final component, present this task's proposed layout and flow to the user (nickname entry → join → cash/holdings/stock list/buy form → paused banner → final ranking) and get explicit sign-off, per their instruction earlier in this project. Treat the code below as the draft to discuss, not a final artifact — revise it to match whatever the user actually approves before running Step 2 onward.
+The user reviewed a visual mockup (join / trading-list / stock chart / game-over states) and approved it with one change: no "future rounds aren't shown" note text. This task implements that approved design exactly — it is no longer a draft to negotiate, transcribe it as specified below.
 
 **Files:**
+- Create: `src/components/BrandBar.tsx`
+- Create: `src/components/StockPriceChart.tsx`
+- Create: `src/routes/ParticipantPage.css`
 - Modify: `src/routes/ParticipantPage.tsx` (replace stub from Task 12)
 
 **Interfaces:**
-- Consumes: `useGameState` (Task 13), `supabase.rpc('join_game', ...)` (Task 5), `supabase.rpc('buy_stock', ...)` (Task 6), `stocks`/`stock_prices` tables (Task 3, seeded in Task 11)
-- Produces: the working `/` screen.
+- Consumes: `useGameState` (Task 13), `supabase.rpc('join_game', ...)` (Task 5), `supabase.rpc('buy_stock', ...)` (Task 6), `stocks`/`stock_prices`/`rounds`/`holdings` tables (Task 3, seeded in Task 11)
+- Produces: the working `/` screen with three internal views (join, stock list, per-stock chart) plus a terminal "game ended" view.
 
-- [ ] **Step 1: Get user approval on the layout/flow (see note above) before proceeding**
+- [ ] **Step 1: Create `src/components/BrandBar.tsx`**
 
-- [ ] **Step 2: Replace `src/routes/ParticipantPage.tsx`** (draft — adjust per approved design)
+```tsx
+export default function BrandBar() {
+  return (
+    <div className="pp-brandbar">
+      <span className="pp-mark">C</span>
+      <span className="pp-word">
+        CAI <b>거래소</b>
+      </span>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 2: Create `src/components/StockPriceChart.tsx`**
+
+```tsx
+interface PricePoint {
+  round: number
+  yearLabel: number
+  price: number
+}
+
+interface StockPriceChartProps {
+  series: PricePoint[]
+}
+
+const WIDTH = 380
+const HEIGHT = 160
+const PAD = 10
+
+export default function StockPriceChart({ series }: StockPriceChartProps) {
+  if (series.length === 0) return null
+
+  const prices = series.map((p) => p.price)
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  const range = max - min || 1
+  const stepX = series.length > 1 ? (WIDTH - PAD * 2) / (series.length - 1) : 0
+
+  const points = series.map((p, i) => ({
+    x: PAD + i * stepX,
+    y: PAD + (1 - (p.price - min) / range) * (HEIGHT - PAD * 2),
+    ...p,
+  }))
+
+  const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
+  const areaPath = `${linePath} L${points[points.length - 1].x},${HEIGHT} L${points[0].x},${HEIGHT} Z`
+
+  return (
+    <div>
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width="100%" role="img" aria-label="종목 가격 추이 차트">
+        <line x1="0" y1={PAD} x2={WIDTH} y2={PAD} stroke="var(--pp-line)" strokeWidth={1} />
+        <line x1="0" y1={HEIGHT / 2} x2={WIDTH} y2={HEIGHT / 2} stroke="var(--pp-line)" strokeWidth={1} />
+        <line x1="0" y1={HEIGHT - PAD} x2={WIDTH} y2={HEIGHT - PAD} stroke="var(--pp-line)" strokeWidth={1} />
+        <path d={areaPath} fill="var(--pp-accent)" opacity={0.1} />
+        <path
+          d={linePath}
+          fill="none"
+          stroke="var(--pp-accent)"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {points.map((p, i) => (
+          <circle
+            key={p.round}
+            cx={p.x}
+            cy={p.y}
+            r={i === points.length - 1 ? 6 : 3.5}
+            fill={i === points.length - 1 ? 'var(--pp-accent)' : 'var(--pp-surface)'}
+            stroke="var(--pp-accent)"
+            strokeWidth={2}
+          />
+        ))}
+      </svg>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--pp-ink-dim)', padding: '0 4px' }}>
+        {series.map((p) => (
+          <span key={p.round}>{p.yearLabel}</span>
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+- [ ] **Step 3: Create `src/routes/ParticipantPage.css`**
+
+```css
+:root {
+  --pp-bg: #f4f2ec;
+  --pp-surface: #ffffff;
+  --pp-surface-2: #ece8dd;
+  --pp-ink: #1c1f1a;
+  --pp-ink-dim: #5b6058;
+  --pp-line: #d9d4c6;
+  --pp-accent: #b8842e;
+  --pp-accent-ink: #3a2a0f;
+  --pp-buy: #2f6b4f;
+  --pp-buy-ink: #eafaf0;
+  --pp-loss: #b5453a;
+  --pp-loss-bg: #f6e4e1;
+  --pp-gain-bg: #e6f0e9;
+  --pp-closed: #a23b2f;
+  --pp-closed-bg: #f9e7e3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pp-bg: #14181a;
+    --pp-surface: #1d2225;
+    --pp-surface-2: #262c2f;
+    --pp-ink: #ece8df;
+    --pp-ink-dim: #9aa19a;
+    --pp-line: #343b3d;
+    --pp-accent: #d8a34c;
+    --pp-accent-ink: #241a08;
+    --pp-buy: #48a276;
+    --pp-buy-ink: #0b1a12;
+    --pp-loss: #e08579;
+    --pp-loss-bg: #3a2320;
+    --pp-gain-bg: #1c2b22;
+    --pp-closed: #e08579;
+    --pp-closed-bg: #3a2320;
+  }
+}
+
+.pp-page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--pp-surface);
+  color: var(--pp-ink);
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.pp-brandbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--pp-line);
+}
+.pp-brandbar .pp-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--pp-accent);
+  color: var(--pp-accent-ink);
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pp-brandbar .pp-word { font-size: 14.5px; font-weight: 800; }
+.pp-brandbar .pp-word b { color: var(--pp-accent); }
+
+.pp-join { padding: 44px 28px; text-align: center; }
+.pp-join .pp-kicker {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--pp-accent); font-weight: 700; margin-bottom: 10px;
+}
+.pp-join h1 { font-size: 22px; margin: 0 0 8px; text-wrap: balance; }
+.pp-join .pp-sub { color: var(--pp-ink-dim); font-size: 14px; margin: 0 0 30px; }
+.pp-join input {
+  width: 100%; font-size: 17px; padding: 14px 16px; border-radius: 12px;
+  border: 1.5px solid var(--pp-line); background: var(--pp-bg); color: var(--pp-ink);
+  text-align: center; margin-bottom: 14px;
+}
+.pp-join button {
+  width: 100%; font-size: 16px; font-weight: 700; padding: 14px;
+  border-radius: 12px; border: none; background: var(--pp-accent);
+  color: var(--pp-accent-ink); cursor: pointer;
+}
+
+.pp-header { padding: 14px 20px 16px; border-bottom: 1px solid var(--pp-line); }
+.pp-header .pp-row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.pp-header .pp-nick { font-size: 15px; font-weight: 700; }
+.pp-round-badge {
+  font-size: 12px; font-weight: 700; color: var(--pp-accent-ink);
+  background: var(--pp-accent); padding: 3px 10px; border-radius: 999px;
+}
+.pp-cash-label { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--pp-ink-dim); margin-bottom: 2px; }
+.pp-cash-amount { font-variant-numeric: tabular-nums; font-size: 27px; font-weight: 700; }
+
+.pp-banner-closed {
+  margin: 14px 20px 0; background: var(--pp-closed-bg); color: var(--pp-closed);
+  border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 700;
+}
+
+.pp-error { margin: 12px 20px 0; color: var(--pp-loss); font-size: 13px; }
+
+.pp-listlabel {
+  padding: 14px 20px 6px; font-size: 11.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--pp-ink-dim); font-weight: 700;
+}
+
+.pp-stocklist { list-style: none; margin: 0; padding: 0 12px 20px; display: flex; flex-direction: column; gap: 6px; }
+.pp-stock-row { border-radius: 12px; }
+.pp-stock-row-main {
+  display: grid; grid-template-columns: 30px 1fr auto; align-items: center;
+  gap: 0 10px; padding: 10px 10px; cursor: pointer;
+}
+.pp-stock-row-main:hover { background: var(--pp-surface-2); }
+.pp-avatar {
+  width: 30px; height: 30px; border-radius: 9px; background: var(--pp-surface-2);
+  color: var(--pp-ink-dim); font-weight: 800; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pp-stock-name { font-size: 14.5px; font-weight: 700; }
+.pp-stock-holding { font-size: 11.5px; color: var(--pp-buy); font-weight: 700; }
+.pp-stock-pricecol { text-align: right; }
+.pp-stock-price { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; }
+.pp-delta {
+  font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 700;
+  padding: 1px 6px; border-radius: 6px; display: inline-block; margin-top: 2px;
+}
+.pp-delta-up { color: var(--pp-buy); background: var(--pp-gain-bg); }
+.pp-delta-down { color: var(--pp-loss); background: var(--pp-loss-bg); }
+
+.pp-buyrow { display: flex; align-items: center; gap: 8px; padding: 8px 10px 12px 40px; }
+.pp-buyrow input {
+  width: 60px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px;
+  padding: 8px 4px; border-radius: 8px; border: 1.5px solid var(--pp-line);
+  background: var(--pp-surface); color: var(--pp-ink);
+}
+.pp-buyrow button.pp-buy {
+  font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 8px;
+  border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
+}
+.pp-buyrow button.pp-buy:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
+.pp-buyrow button.pp-chartlink {
+  margin-left: auto; font-size: 12px; font-weight: 700; color: var(--pp-accent);
+  background: none; border: none; cursor: pointer;
+}
+
+.pp-chart-top { padding: 14px 20px 4px; }
+.pp-chart-back { font-size: 12.5px; color: var(--pp-ink-dim); cursor: pointer; margin-bottom: 10px; background: none; border: none; padding: 0; }
+.pp-chart-name { font-size: 19px; font-weight: 800; }
+.pp-chart-price { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 800; margin-top: 4px; }
+.pp-chart-buy { display: flex; align-items: center; gap: 10px; margin: 16px 20px 22px; }
+.pp-chart-buy input {
+  width: 70px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px;
+  padding: 11px 4px; border-radius: 10px; border: 1.5px solid var(--pp-line);
+  background: var(--pp-surface); color: var(--pp-ink);
+}
+.pp-chart-buy button {
+  flex: 1; font-size: 14.5px; font-weight: 700; padding: 12px; border-radius: 10px;
+  border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
+}
+.pp-chart-buy button:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
+
+.pp-ended { padding: 40px 28px; text-align: center; }
+.pp-ended .pp-kicker {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--pp-accent); font-weight: 700; margin-bottom: 10px;
+}
+.pp-ended h1 { font-size: 21px; margin: 0 0 24px; }
+.pp-final-amount { font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+.pp-final-label { font-size: 13px; color: var(--pp-ink-dim); }
+```
+
+- [ ] **Step 4: Replace `src/routes/ParticipantPage.tsx`**
 
 ```tsx
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useGameState } from '../hooks/useGameState'
+import BrandBar from '../components/BrandBar'
+import StockPriceChart from '../components/StockPriceChart'
 import type { Stock, StockPrice } from '../lib/types'
+import './ParticipantPage.css'
 
 interface Me {
   id: string
   nickname: string
   cash: number
 }
+
+interface RoundInfo {
+  round: number
+  yearLabel: number
+}
+
+type View = { name: 'list' } | { name: 'chart'; stockId: number }
 
 export default function ParticipantPage() {
   const { gameState, loading } = useGameState()
@@ -1740,22 +2016,44 @@ export default function ParticipantPage() {
   const [error, setError] = useState<string | null>(null)
   const [stocks, setStocks] = useState<Stock[]>([])
   const [prices, setPrices] = useState<StockPrice[]>([])
+  const [rounds, setRounds] = useState<RoundInfo[]>([])
+  const [holdings, setHoldings] = useState<Record<number, number>>({})
   const [quantities, setQuantities] = useState<Record<number, number>>({})
+  const [expandedStockId, setExpandedStockId] = useState<number | null>(null)
+  const [view, setView] = useState<View>({ name: 'list' })
 
   useEffect(() => {
     if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 10) return
 
     async function loadStocksAndPrices() {
-      const [{ data: stockRows }, { data: priceRows }] = await Promise.all([
+      const [{ data: stockRows }, { data: priceRows }, { data: roundRows }] = await Promise.all([
         supabase.from('stocks').select('id, name, display_order').order('display_order'),
-        supabase.from('stock_prices').select('stock_id, round, price').eq('round', gameState!.currentRound),
+        supabase
+          .from('stock_prices')
+          .select('stock_id, round, price')
+          .lte('round', gameState!.currentRound)
+          .order('round'),
+        supabase.from('rounds').select('round, year_label').lte('round', gameState!.currentRound).order('round'),
       ])
       setStocks((stockRows ?? []).map((s) => ({ id: s.id, name: s.name, displayOrder: s.display_order })))
       setPrices((priceRows ?? []).map((p) => ({ stockId: p.stock_id, round: p.round, price: p.price })))
+      setRounds((roundRows ?? []).map((r) => ({ round: r.round, yearLabel: r.year_label })))
     }
 
     loadStocksAndPrices()
   }, [gameState?.currentRound])
+
+  async function refreshHoldings(participantId: string) {
+    const { data } = await supabase.from('holdings').select('stock_id, quantity').eq('participant_id', participantId)
+    const map: Record<number, number> = {}
+    for (const h of data ?? []) map[h.stock_id] = h.quantity
+    setHoldings(map)
+  }
+
+  useEffect(() => {
+    if (!me) return
+    refreshHoldings(me.id)
+  }, [me?.id, gameState?.currentRound])
 
   async function join() {
     setError(null)
@@ -1783,88 +2081,175 @@ export default function ParticipantPage() {
     }
     const { data } = await supabase.from('participants').select('id, nickname, cash').eq('id', me.id).single()
     if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
+    await refreshHoldings(me.id)
+  }
+
+  function priceForRound(stockId: number, round: number): number | undefined {
+    return prices.find((p) => p.stockId === stockId && p.round === round)?.price
+  }
+
+  function yearLabelForRound(round: number): number | undefined {
+    return rounds.find((r) => r.round === round)?.yearLabel
   }
 
   if (loading || !gameState) return <p>불러오는 중...</p>
 
   if (!me) {
     return (
-      <main>
-        <h1>모의 투자 게임</h1>
-        <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="닉네임 (예: 1조)" />
-        <button onClick={join}>입장</button>
-        {error && <p>{error}</p>}
+      <main className="pp-page">
+        <BrandBar />
+        <div className="pp-join">
+          <p className="pp-kicker">모의 투자 레크리에이션</p>
+          <h1>닉네임으로 입장하세요</h1>
+          <p className="pp-sub">같은 닉네임으로 다시 들어오면 이전 기록 그대로 이어집니다.</p>
+          <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="예: 1조" />
+          <button onClick={join}>입장하기</button>
+          {error && <p className="pp-error">{error}</p>}
+        </div>
       </main>
     )
   }
 
   if (gameState.currentRound === 11) {
     return (
-      <main>
-        <h1>게임 종료</h1>
-        <p>최종 보유 현금: {me.cash.toLocaleString()}원</p>
+      <main className="pp-page">
+        <BrandBar />
+        <div className="pp-ended">
+          <p className="pp-kicker">게임 종료</p>
+          <h1>10년간의 투자가 끝났습니다</h1>
+          <p className="pp-final-amount">{me.cash.toLocaleString()}원</p>
+          <p className="pp-final-label">{me.nickname}님의 최종 자산</p>
+        </div>
+      </main>
+    )
+  }
+
+  if (view.name === 'chart') {
+    const stock = stocks.find((s) => s.id === view.stockId)
+    if (!stock) {
+      return null
+    }
+    const currentPrice = priceForRound(stock.id, gameState.currentRound) ?? 0
+    const prevPrice = priceForRound(stock.id, gameState.currentRound - 1)
+    const delta = prevPrice !== undefined ? currentPrice - prevPrice : null
+    const series = rounds.map((r) => ({
+      round: r.round,
+      yearLabel: r.yearLabel,
+      price: priceForRound(stock.id, r.round) ?? 0,
+    }))
+
+    return (
+      <main className="pp-page">
+        <BrandBar />
+        <div className="pp-chart-top">
+          <button className="pp-chart-back" onClick={() => setView({ name: 'list' })}>
+            ← 종목 리스트로
+          </button>
+          <div className="pp-chart-name">{stock.name}</div>
+          <div className="pp-chart-price">{currentPrice.toLocaleString()}원</div>
+          {delta !== null && (
+            <span className={delta >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
+              {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toLocaleString()} (전 라운드 대비)
+            </span>
+          )}
+        </div>
+        <StockPriceChart series={series} />
+        <div className="pp-chart-buy">
+          <input
+            type="number"
+            min={1}
+            value={quantities[stock.id] ?? ''}
+            onChange={(e) => setQuantities((prev) => ({ ...prev, [stock.id]: Number(e.target.value) }))}
+            disabled={gameState.isPaused}
+          />
+          <button onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
+            이 가격에 매수
+          </button>
+        </div>
+        {error && <p className="pp-error">{error}</p>}
       </main>
     )
   }
 
   return (
-    <main>
-      <h1>{me.nickname}</h1>
-      {gameState.isPaused && <p>장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
-      <p>보유 현금: {me.cash.toLocaleString()}원</p>
-      {error && <p>{error}</p>}
-      <table>
-        <thead>
-          <tr>
-            <th>종목</th>
-            <th>가격</th>
-            <th>수량</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {stocks.map((stock) => {
-            const price = prices.find((p) => p.stockId === stock.id)?.price ?? 0
-            return (
-              <tr key={stock.id}>
-                <td>{stock.name}</td>
-                <td>{price.toLocaleString()}원</td>
-                <td>
+    <main className="pp-page">
+      <BrandBar />
+      <div className="pp-header">
+        <div className="pp-row1">
+          <span className="pp-nick">{me.nickname}</span>
+          <span className="pp-round-badge">
+            {yearLabelForRound(gameState.currentRound) ?? ''}년 · {gameState.currentRound}라운드
+          </span>
+        </div>
+        <div className="pp-cash-label">보유 현금</div>
+        <div className="pp-cash-amount">{me.cash.toLocaleString()}원</div>
+      </div>
+
+      {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
+      {error && <p className="pp-error">{error}</p>}
+
+      <p className="pp-listlabel">종목 (탭하여 매수)</p>
+      <ul className="pp-stocklist">
+        {stocks.map((stock) => {
+          const price = priceForRound(stock.id, gameState.currentRound) ?? 0
+          const prevPrice = priceForRound(stock.id, gameState.currentRound - 1)
+          const delta = prevPrice !== undefined ? price - prevPrice : null
+          const expanded = expandedStockId === stock.id
+          const holdingQty = holdings[stock.id]
+
+          return (
+            <li key={stock.id} className="pp-stock-row">
+              <div className="pp-stock-row-main" onClick={() => setExpandedStockId(expanded ? null : stock.id)}>
+                <span className="pp-avatar">{stock.displayOrder}</span>
+                <div>
+                  <div className="pp-stock-name">{stock.name}</div>
+                  {holdingQty ? <div className="pp-stock-holding">보유 {holdingQty}주</div> : null}
+                </div>
+                <div className="pp-stock-pricecol">
+                  <div className="pp-stock-price">{price.toLocaleString()}원</div>
+                  {delta !== null && (
+                    <span className={delta >= 0 ? 'pp-delta pp-delta-up' : 'pp-delta pp-delta-down'}>
+                      {delta >= 0 ? '▲' : '▼'} {Math.abs(delta).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {expanded && (
+                <div className="pp-buyrow">
                   <input
                     type="number"
                     min={1}
                     value={quantities[stock.id] ?? ''}
-                    onChange={(e) =>
-                      setQuantities((prev) => ({ ...prev, [stock.id]: Number(e.target.value) }))
-                    }
+                    onChange={(e) => setQuantities((prev) => ({ ...prev, [stock.id]: Number(e.target.value) }))}
                     disabled={gameState.isPaused}
                   />
-                </td>
-                <td>
-                  <button onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
+                  <button className="pp-buy" onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
                     매수
                   </button>
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+                  <button className="pp-chartlink" onClick={() => setView({ name: 'chart', stockId: stock.id })}>
+                    차트 보기 →
+                  </button>
+                </div>
+              )}
+            </li>
+          )
+        })}
+      </ul>
     </main>
   )
 }
 ```
 
-- [ ] **Step 3: Manually verify**
+- [ ] **Step 5: Manually verify**
 
-Run: `npm run dev`, open `/`. Join with a nickname, buy a stock, confirm cash decreases and the row's implied holding is reflected (check via `node scripts/run-sql.mjs` (with a one-off SELECT .sql file) against `holdings`). From `/host`, toggle 거래 일시정지 and confirm the participant screen shows the closed-market message and disables buying without a manual refresh. Advance 다음 해 from `/host` and confirm the participant's cash jumps by the liquidation amount.
+Run: `npm run dev`, open `/`. Join with a nickname, confirm the brand bar ("CAI 거래소") shows on every internal view. Tap a stock row to expand the buy form, buy a stock, confirm cash decreases and "보유 N주" appears under that stock's name. Tap "차트 보기 →" and confirm the chart renders with year labels matching the revealed rounds and the current price/delta shown above it; buying from the chart view should behave identically to buying from the list. Collapse back to the list via "← 종목 리스트로". From `/host`, toggle 거래 일시정지 and confirm the participant screen shows the closed-market banner and disables both the list buy button and the chart buy button without a manual refresh. Advance 다음 해 from `/host` and confirm the participant's cash jumps by the liquidation amount, holdings reset to empty, and the round badge's year/round updates.
 Expected: all of the above hold true against the real Supabase project.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/routes/ParticipantPage.tsx
-git commit -m "feat(fe): implement participant screen (buy-only, pause-aware)"
+git add src/components/BrandBar.tsx src/components/StockPriceChart.tsx src/routes/ParticipantPage.css src/routes/ParticipantPage.tsx
+git commit -m "feat(fe): implement participant screen (buy-only, pause-aware, with price chart)"
 ```
 
 ---
