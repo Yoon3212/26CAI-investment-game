@@ -1,0 +1,173 @@
+:root {
+  --pp-bg: #f4f2ec;
+  --pp-surface: #ffffff;
+  --pp-surface-2: #ece8dd;
+  --pp-ink: #1c1f1a;
+  --pp-ink-dim: #5b6058;
+  --pp-line: #d9d4c6;
+  --pp-accent: #b8842e;
+  --pp-accent-ink: #3a2a0f;
+  --pp-buy: #2f6b4f;
+  --pp-buy-ink: #eafaf0;
+  --pp-loss: #b5453a;
+  --pp-loss-bg: #f6e4e1;
+  --pp-gain-bg: #e6f0e9;
+  --pp-closed: #a23b2f;
+  --pp-closed-bg: #f9e7e3;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --pp-bg: #14181a;
+    --pp-surface: #1d2225;
+    --pp-surface-2: #262c2f;
+    --pp-ink: #ece8df;
+    --pp-ink-dim: #9aa19a;
+    --pp-line: #343b3d;
+    --pp-accent: #d8a34c;
+    --pp-accent-ink: #241a08;
+    --pp-buy: #48a276;
+    --pp-buy-ink: #0b1a12;
+    --pp-loss: #e08579;
+    --pp-loss-bg: #3a2320;
+    --pp-gain-bg: #1c2b22;
+    --pp-closed: #e08579;
+    --pp-closed-bg: #3a2320;
+  }
+}
+
+.pp-page {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--pp-surface);
+  color: var(--pp-ink);
+  font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+}
+
+.pp-brandbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--pp-line);
+}
+.pp-brandbar .pp-mark {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--pp-accent);
+  color: var(--pp-accent-ink);
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pp-brandbar .pp-word { font-size: 14.5px; font-weight: 800; }
+.pp-brandbar .pp-word b { color: var(--pp-accent); }
+
+.pp-join { padding: 44px 28px; text-align: center; }
+.pp-join .pp-kicker {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--pp-accent); font-weight: 700; margin-bottom: 10px;
+}
+.pp-join h1 { font-size: 22px; margin: 0 0 8px; text-wrap: balance; }
+.pp-join .pp-sub { color: var(--pp-ink-dim); font-size: 14px; margin: 0 0 30px; }
+.pp-join input {
+  width: 100%; font-size: 17px; padding: 14px 16px; border-radius: 12px;
+  border: 1.5px solid var(--pp-line); background: var(--pp-bg); color: var(--pp-ink);
+  text-align: center; margin-bottom: 14px;
+}
+.pp-join button {
+  width: 100%; font-size: 16px; font-weight: 700; padding: 14px;
+  border-radius: 12px; border: none; background: var(--pp-accent);
+  color: var(--pp-accent-ink); cursor: pointer;
+}
+
+.pp-header { padding: 14px 20px 16px; border-bottom: 1px solid var(--pp-line); }
+.pp-header .pp-row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.pp-header .pp-nick { font-size: 15px; font-weight: 700; }
+.pp-round-badge {
+  font-size: 12px; font-weight: 700; color: var(--pp-accent-ink);
+  background: var(--pp-accent); padding: 3px 10px; border-radius: 999px;
+}
+.pp-cash-label { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--pp-ink-dim); margin-bottom: 2px; }
+.pp-cash-amount { font-variant-numeric: tabular-nums; font-size: 27px; font-weight: 700; }
+
+.pp-banner-closed {
+  margin: 14px 20px 0; background: var(--pp-closed-bg); color: var(--pp-closed);
+  border-radius: 10px; padding: 10px 14px; font-size: 13px; font-weight: 700;
+}
+
+.pp-error { margin: 12px 20px 0; color: var(--pp-loss); font-size: 13px; }
+
+.pp-listlabel {
+  padding: 14px 20px 6px; font-size: 11.5px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--pp-ink-dim); font-weight: 700;
+}
+
+.pp-stocklist { list-style: none; margin: 0; padding: 0 12px 20px; display: flex; flex-direction: column; gap: 6px; }
+.pp-stock-row { border-radius: 12px; }
+.pp-stock-row-main {
+  display: grid; grid-template-columns: 30px 1fr auto; align-items: center;
+  gap: 0 10px; padding: 10px 10px; cursor: pointer;
+}
+.pp-stock-row-main:hover { background: var(--pp-surface-2); }
+.pp-avatar {
+  width: 30px; height: 30px; border-radius: 9px; background: var(--pp-surface-2);
+  color: var(--pp-ink-dim); font-weight: 800; font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pp-stock-name { font-size: 14.5px; font-weight: 700; }
+.pp-stock-holding { font-size: 11.5px; color: var(--pp-buy); font-weight: 700; }
+.pp-stock-pricecol { text-align: right; }
+.pp-stock-price { font-variant-numeric: tabular-nums; font-size: 14px; font-weight: 700; }
+.pp-delta {
+  font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 700;
+  padding: 1px 6px; border-radius: 6px; display: inline-block; margin-top: 2px;
+}
+.pp-delta-up { color: var(--pp-buy); background: var(--pp-gain-bg); }
+.pp-delta-down { color: var(--pp-loss); background: var(--pp-loss-bg); }
+
+.pp-buyrow { display: flex; align-items: center; gap: 8px; padding: 8px 10px 12px 40px; }
+.pp-buyrow input {
+  width: 60px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px;
+  padding: 8px 4px; border-radius: 8px; border: 1.5px solid var(--pp-line);
+  background: var(--pp-surface); color: var(--pp-ink);
+}
+.pp-buyrow button.pp-buy {
+  font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 8px;
+  border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
+}
+.pp-buyrow button.pp-buy:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
+.pp-buyrow button.pp-chartlink {
+  margin-left: auto; font-size: 12px; font-weight: 700; color: var(--pp-accent);
+  background: none; border: none; cursor: pointer;
+}
+
+.pp-chart-top { padding: 14px 20px 4px; }
+.pp-chart-back { font-size: 12.5px; color: var(--pp-ink-dim); cursor: pointer; margin-bottom: 10px; background: none; border: none; padding: 0; }
+.pp-chart-name { font-size: 19px; font-weight: 800; }
+.pp-chart-price { font-variant-numeric: tabular-nums; font-size: 26px; font-weight: 800; margin-top: 4px; }
+.pp-chart-buy { display: flex; align-items: center; gap: 10px; margin: 16px 20px 22px; }
+.pp-chart-buy input {
+  width: 70px; text-align: center; font-variant-numeric: tabular-nums; font-size: 14px;
+  padding: 11px 4px; border-radius: 10px; border: 1.5px solid var(--pp-line);
+  background: var(--pp-surface); color: var(--pp-ink);
+}
+.pp-chart-buy button {
+  flex: 1; font-size: 14.5px; font-weight: 700; padding: 12px; border-radius: 10px;
+  border: none; background: var(--pp-buy); color: var(--pp-buy-ink); cursor: pointer;
+}
+.pp-chart-buy button:disabled { background: var(--pp-line); color: var(--pp-ink-dim); cursor: not-allowed; }
+
+.pp-ended { padding: 40px 28px; text-align: center; }
+.pp-ended .pp-kicker {
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--pp-accent); font-weight: 700; margin-bottom: 10px;
+}
+.pp-ended h1 { font-size: 21px; margin: 0 0 24px; }
+.pp-final-amount { font-variant-numeric: tabular-nums; font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+.pp-final-label { font-size: 13px; color: var(--pp-ink-dim); }
