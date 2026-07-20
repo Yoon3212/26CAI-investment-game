@@ -19,5 +19,7 @@
    `node scripts/run-sql.mjs supabase/migrations/0001_init_schema.sql` (이후 파일도 동일하게 순서대로)
 5. `npm run dev`
 
-## 배포 (Cloudflare Pages)
-Cloudflare 대시보드에서 이 저장소를 연결하고 Build command `npm run build`, Output directory `dist`로 설정. 환경변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 등록.
+## 배포 (Cloudflare Workers, 정적 자산)
+Cloudflare 대시보드 → Workers & Pages에서 이 저장소를 GitHub으로 연결. Build command `npm run build`, Deploy command `npx wrangler deploy` (저장소의 `wrangler.toml`이 `dist/`를 정적 자산으로 배포하도록 설정되어 있음). 환경변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 등록.
+
+확인된 배포 URL: https://investmentgame.26cai.workers.dev/
