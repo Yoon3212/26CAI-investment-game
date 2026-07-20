@@ -15,6 +15,7 @@
 - Every table has RLS enabled with SELECT-only policies for anon/authenticated. All writes happen exclusively through `SECURITY DEFINER` RPC functions — never add a client-side INSERT/UPDATE/DELETE against these tables.
 - Host actions (`host_next_year`, `host_end_game`, `host_toggle_pause`, `host_reset_game`) take a `p_pin text` argument and verify it server-side against a bcrypt hash in `host_config` (via pgcrypto). Never store the PIN in plaintext or in frontend code.
 - On this Supabase project, `pgcrypto` functions (`crypt`, `gen_salt`) live in the `extensions` schema, not `public`. Any RPC that calls them needs `set search_path = public, extensions` (not just `public`) — discovered while implementing Task 4 (`set_host_pin`) and applied there and to every host_* RPC that calls `crypt()`.
+- Functions declared `returns table (...)` create OUT-parameter-like names matching the return column list, which shadow bare column references of the same name inside the function body and cause "column reference is ambiguous" errors. `join_game` (Task 5) and `buy_stock` (Task 6) both hit this — qualify any WHERE/SET clause column with its table name whenever it matches one of the function's own return column names (e.g. `where participants.nickname = ...` not `where nickname = ...` when `nickname` is also a return column).
 - Trading pause auto-clears (`is_paused = false`) whenever `host_next_year` runs — each new round starts open.
 - Money is `bigint`/`int` (원, no decimals). Starting cash is 1,200,000.
 - All SQL migrations and tests run via `node scripts/run-sql.mjs <file>` against the real Supabase Postgres instance (no local Docker stack assumed).
@@ -723,7 +724,7 @@ begin
     raise exception '참가자를 찾을 수 없습니다: %', p_nickname;
   end if;
 
-  select price into v_price from stock_prices where stock_id = p_stock_id and round = v_round;
+  select price into v_price from stock_prices where stock_prices.stock_id = p_stock_id and stock_prices.round = v_round;
   if not found then
     raise exception '종목 가격 정보를 찾을 수 없습니다';
   end if;
@@ -734,7 +735,7 @@ begin
     raise exception '현금이 부족합니다 (필요: %, 보유: %)', v_cost, v_participant.cash;
   end if;
 
-  update participants set cash = cash - v_cost where id = v_participant.id;
+  update participants set cash = participants.cash - v_cost where participants.id = v_participant.id;
 
   insert into holdings (participant_id, stock_id, quantity)
   values (v_participant.id, p_stock_id, p_quantity)
