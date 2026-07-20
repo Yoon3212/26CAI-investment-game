@@ -279,25 +279,6 @@ export default function ParticipantPage() {
       {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
       {error && <p className="pp-error">{error}</p>}
 
-      {heldStocks.length > 0 && (
-        <div className="pp-holdings-block">
-          <p className="pp-listlabel">보유 주식</p>
-          <ul className="pp-holdings-list">
-            {heldStocks.map((stock) => {
-              const qty = holdings[stock.id]
-              const price = priceForRound(stock.id, gameState.currentRound) ?? 0
-              return (
-                <li key={stock.id} className="pp-holdings-row">
-                  <span className="pp-holdings-name">{stock.name}</span>
-                  <span className="pp-holdings-qty">{qty}주</span>
-                  <span className="pp-holdings-value">{(qty * price).toLocaleString()}원</span>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-      )}
-
       <p className="pp-listlabel">종목 (탭하여 매수)</p>
       <ul className="pp-stocklist">
         {stocks.map((stock) => {
@@ -346,6 +327,31 @@ export default function ParticipantPage() {
           )
         })}
       </ul>
+
+      {heldStocks.length > 0 && (
+        <div className="pp-holdings-block">
+          <p className="pp-listlabel">보유 주식</p>
+          <ul className="pp-holdings-list">
+            {heldStocks.map((stock) => {
+              const qty = holdings[stock.id]
+              const price = priceForRound(stock.id, gameState.currentRound) ?? 0
+              return (
+                <li key={stock.id} className="pp-holdings-row">
+                  <span className="pp-holdings-name">{stock.name}</span>
+                  <span className="pp-holdings-qty">{qty}주</span>
+                  <span className="pp-holdings-value">{(qty * price).toLocaleString()}원</span>
+                </li>
+              )
+            })}
+            <li className="pp-holdings-row pp-holdings-total">
+              <span className="pp-holdings-name">합계</span>
+              <span className="pp-holdings-qty">{heldStocks.reduce((sum, s) => sum + holdings[s.id], 0)}주</span>
+              <span className="pp-holdings-value">{currentHoldingsValue.toLocaleString()}원</span>
+            </li>
+          </ul>
+        </div>
+      )}
+
       {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
     </main>
   )
