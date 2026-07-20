@@ -28,6 +28,7 @@ export default function ParticipantPage() {
   const navigate = useNavigate()
   const { gameState, loading } = useGameState()
   const [nicknameInput, setNicknameInput] = useState('')
+  const [passwordInput, setPasswordInput] = useState('')
   const [me, setMe] = useState<Me | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [stocks, setStocks] = useState<Stock[]>([])
@@ -41,6 +42,8 @@ export default function ParticipantPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
   useEffect(() => {
+    setQuantities({})
+
     if (!gameState || gameState.currentRound < 1 || gameState.currentRound > 11) {
       // No active round (before start, or after end): never keep previously
       // revealed prices on screen — clear them and bail out of any chart
@@ -112,7 +115,9 @@ export default function ParticipantPage() {
 
   async function join() {
     setError(null)
-    const { data, error } = await supabase.rpc('join_game', { p_nickname: nicknameInput }).single()
+    const { data, error } = await supabase
+      .rpc('join_game', { p_nickname: nicknameInput, p_password: passwordInput })
+      .single()
     if (error) {
       setError(error.message)
       return
@@ -137,6 +142,7 @@ export default function ParticipantPage() {
       return
     }
     setToastMessage(`${stockName} ${quantity}주 매수 — 총 ${(price * quantity).toLocaleString()}원`)
+    setQuantities((prev) => ({ ...prev, [stockId]: 1 }))
     const { data } = await supabase.from('participants').select('id, nickname, cash').eq('id', me.id).single()
     if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
     await refreshHoldings(me.id)
@@ -150,6 +156,11 @@ export default function ParticipantPage() {
     return rounds.find((r) => r.round === round)?.yearLabel
   }
 
+  function maxAffordable(price: number): number {
+    if (!me || price <= 0) return 1
+    return Math.max(1, Math.floor(me.cash / price))
+  }
+
   if (loading || !gameState) return <p className="pp-loading">불러오는 중...</p>
 
   if (!me) {
@@ -159,8 +170,16 @@ export default function ParticipantPage() {
         <div className="pp-join">
           <p className="pp-kicker">모의 투자 레크리에이션</p>
           <h1>닉네임으로 입장하세요</h1>
-          <p className="pp-sub">같은 닉네임으로 다시 들어오면 이전 기록 그대로 이어집니다.</p>
+          <p className="pp-sub">
+            처음 입장이면 원하는 비밀번호를 새로 설정하세요. 이미 입장했었다면 그때 설정한 비밀번호를 입력하세요.
+          </p>
           <input value={nicknameInput} onChange={(e) => setNicknameInput(e.target.value)} placeholder="예: 1조" />
+          <input
+            type="password"
+            value={passwordInput}
+            onChange={(e) => setPasswordInput(e.target.value)}
+            placeholder="비밀번호"
+          />
           <button onClick={join}>입장하기</button>
           {error && <p className="pp-error">{error}</p>}
         </div>
@@ -178,6 +197,7 @@ export default function ParticipantPage() {
   }, 0)
   const totalAssets = me.cash + currentHoldingsValue
   const returnRate = ((totalAssets - SEED_MONEY) / SEED_MONEY) * 100
+  const heldStocks = stocks.filter((s) => holdings[s.id])
 
   if (view.name === 'chart') {
     const stock = stocks.find((s) => s.id === view.stockId)
@@ -217,7 +237,9 @@ export default function ParticipantPage() {
             value={quantity}
             onChange={(next) => setQuantities((prev) => ({ ...prev, [stock.id]: next }))}
             disabled={gameState.isPaused}
+            max={maxAffordable(currentPrice)}
           />
+          <span className="pp-buy-total">{(currentPrice * quantity).toLocaleString()}원</span>
           <button onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
             이 가격에 매수
           </button>
@@ -257,6 +279,25 @@ export default function ParticipantPage() {
       {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
       {error && <p className="pp-error">{error}</p>}
 
+      {heldStocks.length > 0 && (
+        <div className="pp-holdings-block">
+          <p className="pp-listlabel">보유 주식</p>
+          <ul className="pp-holdings-list">
+            {heldStocks.map((stock) => {
+              const qty = holdings[stock.id]
+              const price = priceForRound(stock.id, gameState.currentRound) ?? 0
+              return (
+                <li key={stock.id} className="pp-holdings-row">
+                  <span className="pp-holdings-name">{stock.name}</span>
+                  <span className="pp-holdings-qty">{qty}주</span>
+                  <span className="pp-holdings-value">{(qty * price).toLocaleString()}원</span>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
       <p className="pp-listlabel">종목 (탭하여 매수)</p>
       <ul className="pp-stocklist">
         {stocks.map((stock) => {
@@ -290,7 +331,9 @@ export default function ParticipantPage() {
                     value={quantity}
                     onChange={(next) => setQuantities((prev) => ({ ...prev, [stock.id]: next }))}
                     disabled={gameState.isPaused}
+                    max={maxAffordable(price)}
                   />
+                  <span className="pp-buy-total">{(price * quantity).toLocaleString()}원</span>
                   <button className="pp-buy" onClick={() => buy(stock.id)} disabled={gameState.isPaused}>
                     매수
                   </button>

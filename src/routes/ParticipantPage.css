@@ -115,6 +115,17 @@
   text-transform: uppercase; color: var(--pp-ink-dim); font-weight: 700;
 }
 
+.pp-holdings-block { padding: 0 12px; }
+.pp-holdings-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pp-holdings-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 10px; border-radius: 10px; background: var(--pp-surface-2);
+  font-size: 13px;
+}
+.pp-holdings-name { font-weight: 700; }
+.pp-holdings-qty { color: var(--pp-ink-dim); }
+.pp-holdings-value { font-variant-numeric: tabular-nums; font-weight: 700; }
+
 .pp-stocklist { list-style: none; margin: 0; padding: 0 12px 20px; display: flex; flex-direction: column; gap: 6px; }
 .pp-stock-row { border-radius: 12px; }
 .pp-stock-row-main {
@@ -137,6 +148,10 @@
 }
 .pp-delta-up { color: var(--pp-buy); background: var(--pp-gain-bg); }
 .pp-delta-down { color: var(--pp-loss); background: var(--pp-loss-bg); }
+
+.pp-buy-total {
+  font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 700; color: var(--pp-ink-dim);
+}
 
 .pp-buyrow { display: flex; align-items: center; gap: 8px; padding: 8px 10px 12px 40px; flex-wrap: wrap; }
 .pp-buyrow button.pp-buy {

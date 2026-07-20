@@ -22,10 +22,36 @@
   color: var(--pp-ink-dim);
   cursor: not-allowed;
 }
-.qty-stepper-value {
-  min-width: 30px;
+.qty-stepper-input {
+  width: 44px;
+  height: 34px;
+  border: none;
   text-align: center;
   font-variant-numeric: tabular-nums;
   font-size: 14px;
   font-weight: 700;
+  color: var(--pp-ink);
+  background: var(--pp-surface);
+}
+.qty-stepper-input:disabled {
+  color: var(--pp-ink-dim);
+}
+.qty-stepper-input:focus {
+  outline: none;
+  background: var(--pp-gain-bg);
+}
+.qty-stepper-max {
+  height: 34px;
+  padding: 0 10px;
+  border: none;
+  border-left: 1.5px solid var(--pp-line);
+  background: var(--pp-surface-2);
+  color: var(--pp-accent);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.qty-stepper-max:disabled {
+  color: var(--pp-ink-dim);
+  cursor: not-allowed;
 }
