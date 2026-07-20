@@ -2341,3 +2341,158 @@ Expected: every box can be checked with no unexpected errors; note and fix any f
 git add docs/superpowers/testing/2026-07-20-manual-qa-checklist.md
 git commit -m "test: record manual QA checklist for full game flow"
 ```
+
+---
+
+### Task 19: Post-review fixes — `host_start_game` RPC + participant cash staleness
+
+The final whole-branch review (after Task 16) found two Important gaps that block a clean unaided playthrough:
+
+1. **No way to start the game.** `host_reset_game` leaves `game_state.current_round = 0`, `buy_stock` requires round 1–10, and `host_next_year` requires round 1–9 — nothing in the app moves the game from round 0 to round 1. Running a game currently requires direct DB access.
+2. **Participant's own cash goes stale after liquidation.** `ParticipantPage`'s round-change effect only calls `refreshHoldings()`, never refetches the participant's `cash`. After the host clicks 다음 해, the player sees cleared holdings and new prices but stale pre-liquidation cash until their next buy. At game end (`currentRound === 11`) this means the "최종 자산" shown can be wrong for anyone who held stock at round 10.
+
+**Files:**
+- Create: `supabase/migrations/0010_fn_host_start_game.sql`
+- Create: `supabase/tests/0010_fn_host_start_game_test.sql`
+- Modify: `src/routes/HostPage.tsx` (add a "게임 시작" button)
+- Modify: `src/routes/ParticipantPage.tsx` (refetch cash on round change, not just holdings)
+
+**Interfaces:**
+- Consumes: `host_config`, `game_state` (Task 3), `set_host_pin` (Task 4)
+- Produces: `host_start_game(p_pin text) returns void` — moves `current_round` from 0 to 1. `HostPage` gets a new button calling it; `ParticipantPage` gets a `refreshMe` helper alongside the existing `refreshHoldings`.
+
+- [ ] **Step 1: Create `supabase/migrations/0010_fn_host_start_game.sql`**
+
+```sql
+create or replace function host_start_game(p_pin text)
+returns void
+language plpgsql
+security definer
+set search_path = public, extensions
+as $$
+declare
+  v_round int;
+  v_pin_hash text;
+begin
+  select pin_hash into v_pin_hash from host_config where id = 1;
+  if v_pin_hash is null or crypt(p_pin, v_pin_hash) <> v_pin_hash then
+    raise exception '잘못된 진행자 PIN입니다';
+  end if;
+
+  select current_round into v_round from game_state where id = 1;
+  if v_round <> 0 then
+    raise exception '대기 상태(0)에서만 게임을 시작할 수 있습니다 (현재: %)', v_round;
+  end if;
+
+  update game_state set current_round = 1, is_paused = false, updated_at = now() where id = 1;
+end;
+$$;
+```
+
+- [ ] **Step 2: Apply**
+
+Run: `node scripts/run-sql.mjs supabase/migrations/0010_fn_host_start_game.sql`
+Expected: exits 0, prints `CREATE FUNCTION`.
+
+- [ ] **Step 3: Create `supabase/tests/0010_fn_host_start_game_test.sql`**
+
+```sql
+begin;
+
+update host_config set pin_hash = null where id = 1;
+select set_host_pin('7777');
+
+update game_state set current_round = 0 where id = 1;
+
+select host_start_game('7777');
+
+select pg_temp.test_assert(
+  (select current_round from game_state where id = 1) = 1,
+  'host_start_game moves round 0 to round 1'
+);
+
+select pg_temp.test_assert(
+  (select is_paused from game_state where id = 1) = false,
+  'game starts unpaused'
+);
+
+update game_state set current_round = 3 where id = 1;
+do $$
+begin
+  begin
+    perform host_start_game('7777');
+    raise exception 'should not reach here: starting from round 3 was allowed';
+  exception when others then
+    if sqlerrm not like '%대기 상태%' then
+      raise exception 'unexpected error: %', sqlerrm;
+    end if;
+  end;
+end;
+$$;
+
+rollback;
+```
+
+- [ ] **Step 4: Run the test**
+
+Run: `node scripts/run-sql.mjs supabase/tests/_helpers.sql supabase/tests/0010_fn_host_start_game_test.sql`
+Expected: exits 0, all `PASS:`, no `FAIL:`.
+
+- [ ] **Step 5: Add a "게임 시작" button to `src/routes/HostPage.tsx`**
+
+Add a new button, enabled only when `gameState.currentRound === 0`, alongside the existing four buttons (다음 해 / 게임 종료 / 거래 일시정지 / 새 게임 시작):
+
+```tsx
+<button onClick={() => callHostRpc('host_start_game')} disabled={gameState.currentRound !== 0}>
+  게임 시작
+</button>
+```
+
+Place it before the "다음 해" button in the JSX so the button order reads left-to-right as the game's lifecycle: 게임 시작 → 다음 해 → 게임 종료, with 거래 일시정지 / 새 게임 시작 after.
+
+- [ ] **Step 6: Fix `src/routes/ParticipantPage.tsx` to refetch cash on round change**
+
+Add a `refreshMe` function alongside the existing `refreshHoldings`, and call it from the same effect:
+
+```tsx
+async function refreshMe(participantId: string) {
+  const { data } = await supabase
+    .from('participants')
+    .select('id, nickname, cash')
+    .eq('id', participantId)
+    .single()
+  if (data) setMe({ id: data.id, nickname: data.nickname, cash: data.cash })
+}
+```
+
+Change the existing effect:
+
+```tsx
+useEffect(() => {
+  if (!me) return
+  refreshHoldings(me.id)
+}, [me?.id, gameState?.currentRound])
+```
+
+to also call `refreshMe`:
+
+```tsx
+useEffect(() => {
+  if (!me) return
+  refreshHoldings(me.id)
+  refreshMe(me.id)
+}, [me?.id, gameState?.currentRound])
+```
+
+This ensures cash is refetched from the server every time `currentRound` changes (i.e. every time the host advances a year or ends the game), fixing both the mid-game staleness and the wrong "최종 자산" at game end.
+
+- [ ] **Step 7: Manually verify**
+
+Run: `npx tsc --noEmit -p tsconfig.json` and `npm run build` — both must pass. If you can run the app against the real Supabase project, confirm: from a fresh `host_reset_game`, `/host` shows round 0 and a "게임 시작" button (only that one enabled among the round-progression buttons); clicking it with the correct PIN moves to round 1 and enables 다음 해; on `/`, join, buy a stock, have the host advance 다음 해, and confirm the participant's displayed cash updates to reflect the liquidation without needing another buy or a manual refresh.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add supabase/migrations/0010_fn_host_start_game.sql supabase/tests/0010_fn_host_start_game_test.sql src/routes/HostPage.tsx src/routes/ParticipantPage.tsx
+git commit -m "fix: add host_start_game RPC and refresh participant cash on round change"
+```
