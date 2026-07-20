@@ -275,7 +275,7 @@ export default function ParticipantPage() {
   return (
     <main className="pp-page">
       <BrandBar />
-      <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요" />
+      <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요       라운드가 종료되면 자동으로 매도됩니다." />
       <div className="pp-header">
         <div className="pp-row1">
           <span className="pp-nick">{me.nickname}</span>
@@ -299,7 +299,7 @@ export default function ParticipantPage() {
         </div>
       </div>
 
-      {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다. 진행자의 재개를 기다려주세요.</p>}
+      {gameState.isPaused && <p className="pp-banner-closed">장이 마감되었습니다.</p>}
       {error && <p className="pp-error">{error}</p>}
 
       {heldStocks.length > 0 && (
@@ -318,7 +318,7 @@ export default function ParticipantPage() {
               )
             })}
             <li className="pp-holdings-row pp-holdings-total">
-              <span className="pp-holdings-name">합계 총 매수 금액</span>
+              <span className="pp-holdings-name">총 매수 금액</span>
               <span className="pp-holdings-value">{currentHoldingsValue.toLocaleString()}원</span>
             </li>
           </ul>
@@ -326,7 +326,7 @@ export default function ParticipantPage() {
       )}
 
       <div className="pp-card">
-        <p className="pp-listlabel">종목 (탭하여 매수)</p>
+        <p className="pp-listlabel">종목</p>
         <ul className="pp-stocklist">
         {stocks.map((stock) => {
           const price = priceForRound(stock.id, gameState.currentRound) ?? 0
