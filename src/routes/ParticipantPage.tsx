@@ -191,7 +191,7 @@ export default function ParticipantPage() {
 
   if (!me) {
     return (
-      <main className="pp-page">
+      <main className="pp-page pp-page-center">
         <BrandBar />
         <div className="pp-join">
           <p className="pp-kicker">CAI 모의 투자 대회</p>
@@ -210,6 +210,20 @@ export default function ParticipantPage() {
             <button onClick={join}>입장하기</button>
           </div>
           {error && <p className="pp-error">{error}</p>}
+        </div>
+        <p className="pp-credit">제작 윤석현</p>
+      </main>
+    )
+  }
+
+  if (gameState.currentRound < 1) {
+    return (
+      <main className="pp-page pp-page-center">
+        <BrandBar />
+        <div className="pp-join">
+          <p className="pp-kicker">CAI 모의 투자 대회</p>
+          <h1>입장이 완료되었습니다</h1>
+          <p className="pp-sub">진행자의 시작을 기다려주세요.</p>
         </div>
       </main>
     )
@@ -246,7 +260,7 @@ export default function ParticipantPage() {
     return (
       <main className="pp-page">
         <BrandBar />
-        <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요" />
+        <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요, 라운드가 종료되면 자동으로 매도됩니다." />
         <div className="pp-chart-top">
           <button className="pp-chart-back" onClick={() => navigate(-1)}>
             ← 종목 리스트로
@@ -297,9 +311,7 @@ export default function ParticipantPage() {
   return (
     <main className="pp-page">
       <BrandBar />
-      {gameState.currentRound === 1 && (
-        <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요       라운드가 종료되면 자동으로 매도됩니다." />
-      )}
+      <Marquee text="장중 매도는 불가능하니 신중하게 매수하세요, 라운드가 종료되면 자동으로 매도됩니다." />
       <div className="pp-header">
         <div className="pp-row1">
           <span className="pp-nick">{me.nickname}</span>

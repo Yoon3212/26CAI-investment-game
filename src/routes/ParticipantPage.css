@@ -85,6 +85,13 @@
 .pp-brandbar .pp-word { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
 .pp-brandbar .pp-word b { color: var(--pp-accent); }
 
+.pp-page-center { display: flex; flex-direction: column; min-height: 100vh; }
+
+.pp-credit {
+  margin: auto 0 18px; text-align: center; font-size: 11px;
+  color: var(--pp-ink-dim); opacity: .55;
+}
+
 .pp-join { padding: 48px 24px; text-align: center; }
 .pp-join .pp-kicker {
   font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase;
