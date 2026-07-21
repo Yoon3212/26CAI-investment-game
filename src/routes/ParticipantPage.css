@@ -92,6 +92,19 @@
   color: var(--pp-ink-dim); opacity: .55;
 }
 
+.pp-waiting-list {
+  margin-top: 28px; text-align: center; background: var(--pp-surface);
+  border-radius: 18px; padding: 18px 18px 16px; box-shadow: var(--pp-shadow);
+}
+.pp-waiting-participants {
+  list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap;
+  gap: 8px; justify-content: center;
+}
+.pp-waiting-participants li {
+  background: var(--pp-surface-2); border-radius: 999px; padding: 7px 14px;
+  font-size: 13.5px; font-weight: 600;
+}
+
 .pp-join { padding: 48px 24px; text-align: center; }
 .pp-join .pp-kicker {
   font-size: 12.5px; letter-spacing: .12em; text-transform: uppercase;

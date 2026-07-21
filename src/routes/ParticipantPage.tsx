@@ -45,6 +45,30 @@ export default function ParticipantPage() {
   const [expandedStockId, setExpandedStockId] = useState<number | null>(null)
   const [lastRoundProfit, setLastRoundProfit] = useState<number | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
+  const [participantList, setParticipantList] = useState<{ id: string; nickname: string }[]>([])
+
+  useEffect(() => {
+    if (!me || !gameState || gameState.currentRound >= 1) {
+      setParticipantList([])
+      return
+    }
+
+    async function loadParticipants() {
+      const { data } = await supabase.from('participants').select('id, nickname').order('created_at')
+      setParticipantList(data ?? [])
+    }
+
+    loadParticipants()
+
+    const channel = supabase
+      .channel('participant_list_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, loadParticipants)
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [me?.id, gameState?.currentRound])
 
   useEffect(() => {
     setQuantities({})
@@ -217,13 +241,26 @@ export default function ParticipantPage() {
   }
 
   if (gameState.currentRound < 1) {
+    const otherParticipants = participantList.filter((p) => p.id !== me.id)
     return (
       <main className="pp-page pp-page-center">
         <BrandBar />
         <div className="pp-join">
           <p className="pp-kicker">CAI 모의 투자 대회</p>
-          <h1>입장이 완료되었습니다</h1>
-          <p className="pp-sub">진행자의 시작을 기다려주세요.</p>
+          <h1>&quot;{me.nickname}&quot;님</h1>
+          <p className="pp-sub">
+            입장이 완료되었습니다. <br /> 진행자의 시작을 기다려주세요.
+          </p>
+          {otherParticipants.length > 0 && (
+            <div className="pp-waiting-list">
+              <p className="pp-listlabel">참가자 목록 ({participantList.length}명)</p>
+              <ul className="pp-waiting-participants">
+                {otherParticipants.map((p) => (
+                  <li key={p.id}>{p.nickname}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </main>
     )
