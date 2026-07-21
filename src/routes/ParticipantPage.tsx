@@ -241,22 +241,26 @@ export default function ParticipantPage() {
   }
 
   if (gameState.currentRound < 1) {
-    const otherParticipants = participantList.filter((p) => p.id !== me.id)
     return (
       <main className="pp-page pp-page-center">
         <BrandBar />
         <div className="pp-join">
           <p className="pp-kicker">CAI 모의 투자 대회</p>
-          <h1>&quot;{me.nickname}&quot;님</h1>
+          <h1>{me.nickname} 님</h1>
           <p className="pp-sub">
             입장이 완료되었습니다. <br /> 진행자의 시작을 기다려주세요.
           </p>
-          {otherParticipants.length > 0 && (
+          {participantList.length > 0 && (
             <div className="pp-waiting-list">
-              <p className="pp-listlabel">참가자 목록 ({participantList.length}명)</p>
+              <div className="pp-waiting-list-head">
+                <p className="pp-waiting-list-title">참가자 목록</p>
+                <span className="pp-waiting-list-count">{participantList.length}명</span>
+              </div>
               <ul className="pp-waiting-participants">
-                {otherParticipants.map((p) => (
-                  <li key={p.id}>{p.nickname}</li>
+                {participantList.map((p) => (
+                  <li key={p.id} className={p.id === me.id ? 'pp-me' : undefined}>
+                    {p.nickname}
+                  </li>
                 ))}
               </ul>
             </div>

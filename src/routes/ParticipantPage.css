@@ -96,6 +96,14 @@
   margin-top: 28px; text-align: center; background: var(--pp-surface);
   border-radius: 18px; padding: 18px 18px 16px; box-shadow: var(--pp-shadow);
 }
+.pp-waiting-list-head {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px;
+}
+.pp-waiting-list-title { font-size: 16.5px; font-weight: 800; letter-spacing: -.01em; }
+.pp-waiting-list-count {
+  font-size: 12px; font-weight: 700; color: var(--pp-accent-ink);
+  background: var(--pp-accent); padding: 4px 11px; border-radius: 999px;
+}
 .pp-waiting-participants {
   list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap;
   gap: 8px; justify-content: center;
@@ -103,6 +111,9 @@
 .pp-waiting-participants li {
   background: var(--pp-surface-2); border-radius: 999px; padding: 7px 14px;
   font-size: 13.5px; font-weight: 600;
+}
+.pp-waiting-participants li.pp-me {
+  background: var(--pp-accent); color: var(--pp-accent-ink); font-weight: 800;
 }
 
 .pp-join { padding: 48px 24px; text-align: center; }
