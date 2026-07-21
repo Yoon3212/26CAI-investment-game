@@ -88,7 +88,7 @@
 .pp-page-center { display: flex; flex-direction: column; min-height: 100vh; }
 
 .pp-credit {
-  margin: auto 0 18px; text-align: center; font-size: 11px;
+  margin: auto 0 44px; text-align: center; font-size: 11px;
   color: var(--pp-ink-dim); opacity: .55;
 }
 
