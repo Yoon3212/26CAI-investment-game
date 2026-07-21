@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import { useGameState } from '../hooks/useGameState'
 import BrandBar from '../components/BrandBar'
@@ -13,6 +13,10 @@ export default function HostPage() {
   const { gameState, loading } = useGameState()
   const [pin, setPin] = useState('')
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+
+  useEffect(() => {
+    document.title = '관리자 | CAI LT 투자 대회'
+  }, [])
 
   async function callHostRpc(confirmMessage: string, fn: string, extraArgs: Record<string, unknown> = {}) {
     if (!window.confirm(confirmMessage)) return

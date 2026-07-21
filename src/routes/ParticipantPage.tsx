@@ -48,6 +48,10 @@ export default function ParticipantPage() {
   const [participantList, setParticipantList] = useState<{ id: string; nickname: string }[]>([])
 
   useEffect(() => {
+    document.title = '거래소 | CAI LT 투자 대회'
+  }, [])
+
+  useEffect(() => {
     if (!me || !gameState || gameState.currentRound >= 1) {
       setParticipantList([])
       return

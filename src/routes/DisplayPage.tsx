@@ -19,6 +19,10 @@ export default function DisplayPage() {
   const [history, setHistory] = useState<AssetHistoryEntry[]>([])
 
   useEffect(() => {
+    document.title = '순위 | CAI LT 투자 대회'
+  }, [])
+
+  useEffect(() => {
     supabase
       .from('rounds')
       .select('round, year_label')
